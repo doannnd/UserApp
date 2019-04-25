@@ -56,5 +56,9 @@
     <string name="title_activity_test">Map</string>
     <string name="hint_current_location">Current location</string>
     <string name="hint_go_location">I\'m going to…</string>
+    <string name="up_image_view">up image view</string>
+    <string name="pickup_request_button_text">Pickup Request</string>
+    <string name="error_message">error occur</string>
+    <string name="call_driver_button_text">Getting your driver…</string>
 
 </resources>

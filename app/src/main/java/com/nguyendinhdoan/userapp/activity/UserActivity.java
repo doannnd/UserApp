@@ -24,7 +24,9 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -59,6 +61,7 @@ import com.karumi.dexter.PermissionToken;
 import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 import com.nguyendinhdoan.userapp.R;
+import com.nguyendinhdoan.userapp.widget.CallDriverFragment;
 
 import java.util.Arrays;
 import java.util.List;
@@ -66,9 +69,9 @@ import java.util.Objects;
 
 public class UserActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback,
-        View.OnTouchListener {
+        View.OnTouchListener, View.OnClickListener {
 
-    private static final String USER_LOCATION_TABLE_NAME = "user_location";
+    private static final String USER_LOCATION_TABLE_NAME = "pickup_request";
     private static final String TAG = "USER_ACTIVITY";
 
     private static final int ORIGIN_AUTOCOMPLETE_REQUEST_CODE = 9000;
@@ -77,6 +80,7 @@ public class UserActivity extends AppCompatActivity
     public static final long LOCATION_REQUEST_INTERVAL = 5000L;
     public static final long LOCATION_REQUEST_FASTEST_INTERVAL = 3000L;
     public static final float LOCATION_REQUEST_DISPLACEMENT = 10.0F;
+    private static final String CALL_DRIVER = "Call Driver";
 
     private Toolbar toolbar;
     private DrawerLayout drawerLayout;
@@ -84,6 +88,8 @@ public class UserActivity extends AppCompatActivity
     private EditText originEditText;
     private EditText destinationEditText;
     private ProgressBar userProgressBar;
+    private ImageView upImageView;
+    private Button pickupRequestButton;
 
     private GoogleMap userGoogleMap;
     private FusedLocationProviderClient fusedLocationProviderClient;
@@ -113,6 +119,8 @@ public class UserActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
         originEditText.setOnTouchListener(this);
         destinationEditText.setOnTouchListener(this);
+        upImageView.setOnClickListener(this);
+        pickupRequestButton.setOnClickListener(this);
     }
 
     private void initViews() {
@@ -122,6 +130,8 @@ public class UserActivity extends AppCompatActivity
         originEditText = findViewById(R.id.origin_edit_text);
         destinationEditText = findViewById(R.id.destination_edit_text);
         userProgressBar = findViewById(R.id.user_progress_bar);
+        upImageView = findViewById(R.id.up_image_view);
+        pickupRequestButton = findViewById(R.id.pickup_request_button);
     }
 
     private void setupUI() {
@@ -225,7 +235,7 @@ public class UserActivity extends AppCompatActivity
     @Override
     public void onMapReady(GoogleMap googleMap) {
 
-       userGoogleMap = googleMap;
+        userGoogleMap = googleMap;
 
         setupMap();
     }
@@ -350,6 +360,7 @@ public class UserActivity extends AppCompatActivity
                                     && ActivityCompat.checkSelfPermission(UserActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                                 return;
                             }
+
                             fusedLocationProviderClient.requestLocationUpdates(
                                     locationRequest, locationCallback, Looper.myLooper());
                         }
@@ -387,45 +398,30 @@ public class UserActivity extends AppCompatActivity
     }
 
     private void displayCurrentLocation() {
-            // get information save in driver_location table on firebase
-            FirebaseUser user = userAuth.getCurrentUser();
-            if (user != null) {
-                String userId = user.getUid();
-                final double driverLatitude = lastLocation.getLatitude();
-                final double driverLongitude = lastLocation.getLongitude();
-
-                // save location of driver in realtime database and update location on google map
-                userGeoFire.setLocation(userId, new GeoLocation(driverLatitude, driverLongitude),
-                        new GeoFire.CompletionListener() {
-                            @Override
-                            public void onComplete(String key, DatabaseError error) {
-                                if (error == null) {
-                                    Log.d(TAG, "save current location of user success");
-                                    updateUI(driverLatitude, driverLongitude);
-                                } else {
-                                    Log.e(TAG, "have error in display current location: " + error);
-                                }
-                            }
-                        });
-            }
-    }
-
-    private void updateUI(double driverLatitude, double driverLongitude) {
-
         if (userMarker != null) {
             userMarker.remove(); // if marker existed --> delete
         }
 
+        double userLatitude = lastLocation.getLatitude();
+        double userLongitude = lastLocation.getLongitude();
+
         // draw marker on google map
         userMarker = userGoogleMap.addMarker(new MarkerOptions()
-                .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_current_location))
-                .position(new LatLng(driverLatitude, driverLongitude))
+                .position(new LatLng(userLatitude, userLongitude))
                 .title(getString(R.string.title_of_you))
         );
 
+        // display icon default
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+
+        userGoogleMap.setMyLocationEnabled(true);
+
         // move camera
         userGoogleMap.moveCamera(
-                CameraUpdateFactory.newLatLngZoom(new LatLng(driverLatitude, driverLongitude), USER_MAP_ZOOM)
+                CameraUpdateFactory.newLatLngZoom(new LatLng(userLatitude, userLongitude), USER_MAP_ZOOM)
         );
 
         // hide progress bar complete display current location
@@ -440,7 +436,6 @@ public class UserActivity extends AppCompatActivity
         locationRequest.setSmallestDisplacement(LOCATION_REQUEST_DISPLACEMENT);
     }
 
-    // TODO: ......
     private void stopLocationUpdates() {
         fusedLocationProviderClient.removeLocationUpdates(locationCallback);
     }
@@ -452,5 +447,58 @@ public class UserActivity extends AppCompatActivity
         TextView textSnack = view.findViewById(android.support.design.R.id.snackbar_text);
         textSnack.setTextColor(getResources().getColor(R.color.colorBlack));
         snackbar.show();
+    }
+
+    @Override
+    protected void onDestroy() {
+        stopLocationUpdates();
+        super.onDestroy();
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.up_image_view: {
+                CallDriverFragment callDriverFragment = CallDriverFragment.newInstance(CALL_DRIVER);
+                callDriverFragment.show(getSupportFragmentManager(), callDriverFragment.getTag());
+                break;
+            }
+            case R.id.pickup_request_button: {
+                requestPickupHere();
+                break;
+            }
+        }
+    }
+
+    private void requestPickupHere() {
+        FirebaseUser user = userAuth.getCurrentUser();
+        if (user != null && lastLocation != null) {
+            String userId = user.getUid();
+
+            userGeoFire.setLocation(userId, new GeoLocation(lastLocation.getLatitude(), lastLocation.getLongitude()),
+                    new GeoFire.CompletionListener() {
+                @Override
+                public void onComplete(String key, DatabaseError error) {
+                    if (error == null) {
+                        pickupRequestButton.setText(getString(R.string.call_driver_button_text));
+
+                        if (userMarker != null) {
+                            userMarker.remove();
+                        }
+
+                        // add new marker
+                        userMarker = userGoogleMap.addMarker(new MarkerOptions()
+                                .title("SET PICKUP LOCATION")
+                                .position(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()))
+                        );
+                        // always show ...
+                        userMarker.showInfoWindow();
+
+                    } else {
+                        showSnackBar(getString(R.string.error_message));
+                    }
+                }
+            });
+        }
     }
 }
