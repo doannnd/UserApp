@@ -1,12 +1,17 @@
 package com.nguyendinhdoan.userapp.activity;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Location;
 import android.os.Bundle;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -20,20 +25,39 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.firebase.geofire.GeoFire;
+import com.firebase.geofire.GeoLocation;
 import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
 import com.google.android.libraries.places.widget.Autocomplete;
 import com.google.android.libraries.places.widget.AutocompleteActivity;
 import com.google.android.libraries.places.widget.model.AutocompleteActivityMode;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.karumi.dexter.Dexter;
+import com.karumi.dexter.MultiplePermissionsReport;
+import com.karumi.dexter.PermissionToken;
+import com.karumi.dexter.listener.PermissionRequest;
+import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 import com.nguyendinhdoan.userapp.R;
 
 import java.util.Arrays;
@@ -44,15 +68,31 @@ public class UserActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback,
         View.OnTouchListener {
 
+    private static final String USER_LOCATION_TABLE_NAME = "user_location";
     private static final String TAG = "USER_ACTIVITY";
+
     private static final int ORIGIN_AUTOCOMPLETE_REQUEST_CODE = 9000;
     private static final int DESTINATION_AUTOCOMPLETE_REQUEST_CODE = 9001;
+    private static final float USER_MAP_ZOOM = 15.0F;
+    public static final long LOCATION_REQUEST_INTERVAL = 5000L;
+    public static final long LOCATION_REQUEST_FASTEST_INTERVAL = 3000L;
+    public static final float LOCATION_REQUEST_DISPLACEMENT = 10.0F;
 
     private Toolbar toolbar;
     private DrawerLayout drawerLayout;
     private NavigationView navigationView;
     private EditText originEditText;
     private EditText destinationEditText;
+    private ProgressBar userProgressBar;
+
+    private GoogleMap userGoogleMap;
+    private FusedLocationProviderClient fusedLocationProviderClient;
+    private LocationCallback locationCallback;
+    private LocationRequest locationRequest;
+    private FirebaseAuth userAuth;
+    private Location lastLocation;
+    private Marker userMarker;
+    private GeoFire userGeoFire;
 
     public static Intent start(Context context) {
         return new Intent(context, UserActivity.class);
@@ -81,6 +121,7 @@ public class UserActivity extends AppCompatActivity
         navigationView = findViewById(R.id.nav_view);
         originEditText = findViewById(R.id.origin_edit_text);
         destinationEditText = findViewById(R.id.destination_edit_text);
+        userProgressBar = findViewById(R.id.user_progress_bar);
     }
 
     private void setupUI() {
@@ -88,6 +129,21 @@ public class UserActivity extends AppCompatActivity
         setupNavigationView();
         setupGoogleMap();
         setupPlacesAPI();
+        setupFirebase();
+        setupLocation();
+    }
+
+    private void setupFirebase() {
+        DatabaseReference driverLocation = FirebaseDatabase.getInstance().getReference(USER_LOCATION_TABLE_NAME);
+        userGeoFire = new GeoFire(driverLocation);
+        userAuth = FirebaseAuth.getInstance();
+    }
+
+    private void setupLocation() {
+        fusedLocationProviderClient = new FusedLocationProviderClient(this);
+
+        // begin update location;
+        startLocationUpdates();
     }
 
     private void setupPlacesAPI() {
@@ -169,14 +225,16 @@ public class UserActivity extends AppCompatActivity
     @Override
     public void onMapReady(GoogleMap googleMap) {
 
-        googleMap.addMarker(
-                new MarkerOptions().position(new LatLng(21.1541804, 105.7403176))
-                        .title("Ha Noi")
-        );
+       userGoogleMap = googleMap;
 
-        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
-                new LatLng(21.1541804, 105.7403176), 15.0f
-        ));
+        setupMap();
+    }
+
+    private void setupMap() {
+        userGoogleMap.setIndoorEnabled(false);
+        userGoogleMap.setBuildingsEnabled(false);
+        userGoogleMap.setTrafficEnabled(false);
+        userGoogleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
     }
 
     @Override
@@ -271,6 +329,120 @@ public class UserActivity extends AppCompatActivity
                 showSnackBar(getString(R.string.user_cancel_operation));
             }
         }
+    }
+
+    private void startLocationUpdates() {
+        Dexter.withActivity(this)
+                .withPermissions(Manifest.permission.ACCESS_COARSE_LOCATION,
+                        Manifest.permission.ACCESS_FINE_LOCATION)
+                .withListener(new MultiplePermissionsListener() {
+                    @Override
+                    public void onPermissionsChecked(MultiplePermissionsReport report) {
+                        if (report.areAllPermissionsGranted()) {
+
+                            // show loading
+                            userProgressBar.setVisibility(View.VISIBLE);
+
+                            buildLocationRequest();
+                            buildLocationCallback();
+                            // update location
+                            if (ActivityCompat.checkSelfPermission(UserActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                                    && ActivityCompat.checkSelfPermission(UserActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                                return;
+                            }
+                            fusedLocationProviderClient.requestLocationUpdates(
+                                    locationRequest, locationCallback, Looper.myLooper());
+                        }
+
+                        if (report.isAnyPermissionPermanentlyDenied()) {
+                            // TODO: ....
+                        }
+                    }
+
+                    @Override
+                    public void onPermissionRationaleShouldBeShown(List<PermissionRequest> permissions,
+                                                                   PermissionToken token) {
+                        token.continuePermissionRequest();
+                    }
+                })
+                .onSameThread()
+                .check();
+
+    }
+
+    private void buildLocationCallback() {
+        locationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+                lastLocation = locationResult.getLastLocation();
+                Log.d(TAG, "current location latitude: " + lastLocation.getLatitude());
+                Log.d(TAG, "current location longitude: " + lastLocation.getLongitude());
+
+                // display current location on the google map
+                displayCurrentLocation();
+            }
+        };
+
+    }
+
+    private void displayCurrentLocation() {
+            // get information save in driver_location table on firebase
+            FirebaseUser user = userAuth.getCurrentUser();
+            if (user != null) {
+                String userId = user.getUid();
+                final double driverLatitude = lastLocation.getLatitude();
+                final double driverLongitude = lastLocation.getLongitude();
+
+                // save location of driver in realtime database and update location on google map
+                userGeoFire.setLocation(userId, new GeoLocation(driverLatitude, driverLongitude),
+                        new GeoFire.CompletionListener() {
+                            @Override
+                            public void onComplete(String key, DatabaseError error) {
+                                if (error == null) {
+                                    Log.d(TAG, "save current location of user success");
+                                    updateUI(driverLatitude, driverLongitude);
+                                } else {
+                                    Log.e(TAG, "have error in display current location: " + error);
+                                }
+                            }
+                        });
+            }
+    }
+
+    private void updateUI(double driverLatitude, double driverLongitude) {
+
+        if (userMarker != null) {
+            userMarker.remove(); // if marker existed --> delete
+        }
+
+        // draw marker on google map
+        userMarker = userGoogleMap.addMarker(new MarkerOptions()
+                .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_current_location))
+                .position(new LatLng(driverLatitude, driverLongitude))
+                .title(getString(R.string.title_of_you))
+        );
+
+        // move camera
+        userGoogleMap.moveCamera(
+                CameraUpdateFactory.newLatLngZoom(new LatLng(driverLatitude, driverLongitude), USER_MAP_ZOOM)
+        );
+
+        // hide progress bar complete display current location
+        userProgressBar.setVisibility(View.INVISIBLE);
+    }
+
+    private void buildLocationRequest() {
+        locationRequest = new LocationRequest();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setInterval(LOCATION_REQUEST_INTERVAL);
+        locationRequest.setFastestInterval(LOCATION_REQUEST_FASTEST_INTERVAL);
+        locationRequest.setSmallestDisplacement(LOCATION_REQUEST_DISPLACEMENT);
+    }
+
+    // TODO: ......
+    private void stopLocationUpdates() {
+        fusedLocationProviderClient.removeLocationUpdates(locationCallback);
     }
 
     private void showSnackBar(String message) {

@@ -58,6 +58,8 @@
                 android:inputType="text"
                 android:textColorHint="@color/colorBlack"
                 android:textSize="14sp"
+                android:maxLines="1"
+                android:ellipsize="end"
                 tools:ignore="Autofill" />
 
             <View
@@ -78,6 +80,8 @@
                 android:textColorHint="@android:color/darker_gray"
                 android:textSize="14sp"
                 android:textStyle="bold"
+                android:maxLines="1"
+                android:ellipsize="end"
                 tools:ignore="Autofill" />
 
         </LinearLayout>
