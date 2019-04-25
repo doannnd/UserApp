@@ -27,6 +27,8 @@ import com.nguyendinhdoan.userapp.R;
 public class UserActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback {
 
+    private Toolbar toolbar;
+
     public static Intent start(Context context) {
         return new Intent(context, UserActivity.class);
     }
@@ -35,8 +37,10 @@ public class UserActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user);
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+
+        initViews();
+        setupUI();
+        addEvents();
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         NavigationView navigationView = findViewById(R.id.nav_view);
@@ -50,6 +54,25 @@ public class UserActivity extends AppCompatActivity
         SupportMapFragment supportMapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         supportMapFragment.getMapAsync(this);
+    }
+
+    private void addEvents() {
+
+    }
+
+    private void initViews() {
+        toolbar = findViewById(R.id.toolbar);
+    }
+
+    private void setupUI() {
+        setupToolbar();
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+        }
+    }
+
+    private void setupToolbar() {
+        setSupportActionBar(toolbar);
     }
 
     @Override
