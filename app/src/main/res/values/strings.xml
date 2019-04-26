@@ -60,5 +60,7 @@
     <string name="pickup_request_button_text">Pickup Request</string>
     <string name="error_message">error occur</string>
     <string name="call_driver_button_text">Getting your driver…</string>
+    <string name="driver_phone">phone: %s</string>
+    <string name="call_driver_replace">Call Driver</string>
 
 </resources>
