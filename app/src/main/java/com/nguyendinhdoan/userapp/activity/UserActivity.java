@@ -48,6 +48,9 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
 import com.google.android.libraries.places.widget.Autocomplete;
@@ -60,18 +63,32 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.InstanceIdResult;
+import com.google.gson.Gson;
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.MultiplePermissionsReport;
 import com.karumi.dexter.PermissionToken;
 import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 import com.nguyendinhdoan.userapp.R;
+import com.nguyendinhdoan.userapp.common.Common;
+import com.nguyendinhdoan.userapp.model.Notification;
+import com.nguyendinhdoan.userapp.model.Result;
+import com.nguyendinhdoan.userapp.model.Sender;
+import com.nguyendinhdoan.userapp.model.Token;
 import com.nguyendinhdoan.userapp.model.User;
+import com.nguyendinhdoan.userapp.remote.IFirebaseMessagingAPI;
+import com.nguyendinhdoan.userapp.services.TokenService;
 import com.nguyendinhdoan.userapp.widget.CallDriverFragment;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class UserActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback,
@@ -115,6 +132,8 @@ public class UserActivity extends AppCompatActivity
     private boolean isDriverFound = false;
     private String driverId;
 
+    private IFirebaseMessagingAPI mServices;
+
     public static Intent start(Context context) {
         return new Intent(context, UserActivity.class);
     }
@@ -156,6 +175,40 @@ public class UserActivity extends AppCompatActivity
         setupPlacesAPI();
         setupFirebase();
         setupLocation();
+        initServices();
+        updateTokenToDatabase();
+    }
+
+    private void updateTokenToDatabase() {
+        final DatabaseReference tokenTable = FirebaseDatabase.getInstance().getReference(TokenService.TOKEN_TABLE_NAME);
+
+        FirebaseInstanceId.getInstance().getInstanceId().addOnSuccessListener(new OnSuccessListener<InstanceIdResult>() {
+            @Override
+            public void onSuccess(InstanceIdResult instanceIdResult) {
+                String newToken = instanceIdResult.getToken();
+                Token token = new Token(newToken);
+
+                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                if (user != null) {
+                    String userId = user.getUid();
+                    tokenTable.child(userId).setValue(token)
+                            .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Void> task) {
+                                    if (task.isSuccessful()) {
+                                        Log.d(TAG, "update token at [UserActivity] success ");
+                                    } else {
+                                        Log.e(TAG, "update new token at [UserActivity] failed ");
+                                    }
+                                }
+                            });
+                }
+            }
+        });
+    }
+
+    private void initServices() {
+        mServices = Common.getFirebaseMessagingAPI();
     }
 
     private void setupFirebase() {
@@ -555,10 +608,74 @@ public class UserActivity extends AppCompatActivity
                 break;
             }
             case R.id.pickup_request_button: {
-                requestPickupHere();
+                if (!isDriverFound) {
+                    requestPickupHere();
+                } else {
+                    // user call driver request a car, user app send current location of user --> driver app
+                    sendRequestToDiver(driverId);
+                }
+
                 break;
             }
         }
+    }
+
+    private void sendRequestToDiver(String driverId) {
+        DatabaseReference tokenTable = FirebaseDatabase.getInstance().getReference(TokenService.TOKEN_TABLE_NAME);
+
+        // check token id equal driverId
+        tokenTable.orderByKey().equalTo(driverId)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        for (DataSnapshot tokenSnapshot : dataSnapshot.getChildren()) {
+                            // get token object from database with key is driverId
+                            Token token = tokenSnapshot.getValue(Token.class);
+
+                            // convert LatLng to json , next send json to driver app
+                            String jsonLocation = new Gson().toJson(
+                                    new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude())
+                            );
+
+                            // send notification for driver app [jsonLocation - body]
+                            String title = getString(R.string.notification_title);
+                            Notification notification = new Notification(title, jsonLocation);
+
+                            // content send have driverId, --> driver people user call
+                            if (token != null) {
+                                String driverIdToken = token.getToken();
+                                Sender sender = new Sender(notification, driverIdToken);
+
+                                // handle send to driver app firebase cloud messaging
+                                mServices.sendMessage(sender)
+                                        .enqueue(new Callback<Result>() {
+                                            @Override
+                                            public void onResponse(@NonNull Call<Result> call,
+                                                                   @NonNull Response<Result> response) {
+                                                if (response.isSuccessful()) {
+                                                    showSnackBar(getString(R.string.send_message_to_driver_success));
+                                                } else {
+                                                    showSnackBar(getString(R.string.send_message_to_driver_error));
+                                                }
+                                            }
+
+                                            @Override
+                                            public void onFailure(@NonNull Call<Result> call,
+                                                                  @NonNull Throwable t) {
+                                                showSnackBar(t.getMessage());
+                                                Log.e(TAG, "send message to driver app error" + t.getMessage());
+                                            }
+                                        });
+                            }
+
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                });
     }
 
     private void requestPickupHere() {

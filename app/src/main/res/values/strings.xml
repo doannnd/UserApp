@@ -62,5 +62,8 @@
     <string name="call_driver_button_text">Getting your driver…</string>
     <string name="driver_phone">phone: %s</string>
     <string name="call_driver_replace">Call Driver</string>
+    <string name="notification_title">user call to driver</string>
+    <string name="send_message_to_driver_error">send message to dirver error</string>
+    <string name="send_message_to_driver_success">Send message to driver success</string>
 
 </resources>
