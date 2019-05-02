@@ -79,7 +79,7 @@ import com.nguyendinhdoan.userapp.model.Sender;
 import com.nguyendinhdoan.userapp.model.Token;
 import com.nguyendinhdoan.userapp.model.User;
 import com.nguyendinhdoan.userapp.remote.IFirebaseMessagingAPI;
-import com.nguyendinhdoan.userapp.services.TokenService;
+import com.nguyendinhdoan.userapp.services.MyFirebaseIdServices;
 import com.nguyendinhdoan.userapp.widget.CallDriverFragment;
 
 import java.util.Arrays;
@@ -140,6 +140,7 @@ public class UserActivity extends AppCompatActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.d(TAG, "onCreate: started.");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user);
 
@@ -150,6 +151,7 @@ public class UserActivity extends AppCompatActivity
 
     @SuppressLint("ClickableViewAccessibility")
     private void addEvents() {
+        Log.d(TAG, "addEvents: started.");
         navigationView.setNavigationItemSelectedListener(this);
         originEditText.setOnTouchListener(this);
         destinationEditText.setOnTouchListener(this);
@@ -158,6 +160,7 @@ public class UserActivity extends AppCompatActivity
     }
 
     private void initViews() {
+        Log.d(TAG, "initViews: started.");
         toolbar = findViewById(R.id.toolbar);
         drawerLayout = findViewById(R.id.drawer_layout);
         navigationView = findViewById(R.id.nav_view);
@@ -169,6 +172,7 @@ public class UserActivity extends AppCompatActivity
     }
 
     private void setupUI() {
+        Log.d(TAG, "setupUI: started.");
         setupToolbar();
         setupNavigationView();
         setupGoogleMap();
@@ -180,7 +184,8 @@ public class UserActivity extends AppCompatActivity
     }
 
     private void updateTokenToDatabase() {
-        final DatabaseReference tokenTable = FirebaseDatabase.getInstance().getReference(TokenService.TOKEN_TABLE_NAME);
+        Log.d(TAG, "updateTokenToDatabase: started");
+        final DatabaseReference tokenTable = FirebaseDatabase.getInstance().getReference(MyFirebaseIdServices.TOKEN_TABLE_NAME);
 
         FirebaseInstanceId.getInstance().getInstanceId().addOnSuccessListener(new OnSuccessListener<InstanceIdResult>() {
             @Override
@@ -621,7 +626,7 @@ public class UserActivity extends AppCompatActivity
     }
 
     private void sendRequestToDiver(String driverId) {
-        DatabaseReference tokenTable = FirebaseDatabase.getInstance().getReference(TokenService.TOKEN_TABLE_NAME);
+        DatabaseReference tokenTable = FirebaseDatabase.getInstance().getReference(MyFirebaseIdServices.TOKEN_TABLE_NAME);
 
         // check token id equal driverId
         tokenTable.orderByKey().equalTo(driverId)

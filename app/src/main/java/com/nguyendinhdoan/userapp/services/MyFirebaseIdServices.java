@@ -16,7 +16,7 @@ import com.nguyendinhdoan.userapp.model.Token;
 /**
  * When have refresh token, we need update token in realtime database of firebase
  */
-public class TokenService extends FirebaseMessagingService {
+public class MyFirebaseIdServices extends FirebaseMessagingService {
 
     public static final String TAG = "TOKEN_SERVICE";
     public static final String TOKEN_TABLE_NAME = "tokens";
