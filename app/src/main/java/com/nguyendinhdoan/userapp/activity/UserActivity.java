@@ -441,10 +441,6 @@ public class UserActivity extends AppCompatActivity
                             fusedLocationProviderClient.requestLocationUpdates(
                                     locationRequest, locationCallback, Looper.myLooper());
                         }
-
-                        if (report.isAnyPermissionPermanentlyDenied()) {
-                            // TODO: ....
-                        }
                     }
 
                     @Override
@@ -475,6 +471,22 @@ public class UserActivity extends AppCompatActivity
     }
 
     private void displayCurrentLocation() {
+
+        DatabaseReference driverLocationTable = FirebaseDatabase.getInstance().getReference(DRIVER_LOCATION_TABLE_NAME);
+        // if any change from driver location table ==> reload all driver
+        driverLocationTable.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                // reload if change driver location : offline or online of driver
+                loadAllAvailableDriver();
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Log.e(TAG, "onCancelled: error in reload all available driver " + databaseError);
+            }
+        });
+
         if (userMarker != null) {
             userMarker.remove(); // if marker existed --> delete
         }
@@ -494,6 +506,7 @@ public class UserActivity extends AppCompatActivity
             return;
         }
 
+        // icon current location of google
         userGoogleMap.setMyLocationEnabled(true);
 
         // move camera
@@ -509,6 +522,16 @@ public class UserActivity extends AppCompatActivity
     }
 
     private void loadAllAvailableDriver() {
+
+        // first remove add marker on map
+        userGoogleMap.clear();
+        // after add marker of current location
+        userGoogleMap.addMarker(
+                new MarkerOptions().position(
+                        new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude())
+                ).title("You")
+        );
+
         GeoQuery loadAllGeoQuery = driverLocationGeoFire.queryAtLocation(new GeoLocation(
                 lastLocation.getLatitude(), lastLocation.getLongitude()), radiusLoadAllDriver);
 
