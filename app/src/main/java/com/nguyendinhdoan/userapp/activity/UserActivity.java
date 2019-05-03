@@ -665,11 +665,15 @@ public class UserActivity extends AppCompatActivity
                                     new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude())
                             );
 
-                            // send notification for driver app [jsonLocation - body]
-                            String title = getString(R.string.notification_title);
-                            Notification notification = new Notification(title, jsonLocation);
+                            // send notification for driver app [jsonLocation - body] and title is user id token
+                            FirebaseUser user = userAuth.getCurrentUser();
+                            Notification notification = null;
+                            if (user != null) {
+                                String userId = user.getUid();
+                                notification = new Notification(userId, jsonLocation);
+                            }
 
-                            // content send have driverId, --> driver people user call
+                            // content send have driverId, --> driver is people user want to call
                             if (token != null) {
                                 String driverIdToken = token.getToken();
                                 Sender sender = new Sender(notification, driverIdToken);
