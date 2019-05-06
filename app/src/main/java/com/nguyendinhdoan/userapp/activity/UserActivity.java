@@ -10,20 +10,18 @@ import android.os.Bundle;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
-import android.util.Log;
-import android.view.MotionEvent;
-import android.view.View;
 import android.support.v4.view.GravityCompat;
-import android.support.v7.app.ActionBarDrawerToggle;
-import android.view.MenuItem;
-import android.support.design.widget.NavigationView;
 import android.support.v4.widget.DrawerLayout;
-
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.Menu;
+import android.util.Log;
+import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -100,7 +98,6 @@ public class UserActivity extends AppCompatActivity
     private static final String DRIVER_LOCATION_TABLE_NAME = "driver_location";
     private static final String DRIVER_TABLE_NAME = "drivers";
 
-    private static final int ORIGIN_AUTOCOMPLETE_REQUEST_CODE = 9000;
     private static final int DESTINATION_AUTOCOMPLETE_REQUEST_CODE = 9001;
     private static final float USER_MAP_ZOOM = 15.0F;
     private static final long LOCATION_REQUEST_INTERVAL = 5000L;
@@ -111,7 +108,6 @@ public class UserActivity extends AppCompatActivity
     private Toolbar toolbar;
     private DrawerLayout drawerLayout;
     private NavigationView navigationView;
-    private EditText originEditText;
     private EditText destinationEditText;
     private ProgressBar userProgressBar;
     private ImageView upImageView;
@@ -153,7 +149,6 @@ public class UserActivity extends AppCompatActivity
     private void addEvents() {
         Log.d(TAG, "addEvents: started.");
         navigationView.setNavigationItemSelectedListener(this);
-        originEditText.setOnTouchListener(this);
         destinationEditText.setOnTouchListener(this);
         upImageView.setOnClickListener(this);
         pickupRequestButton.setOnClickListener(this);
@@ -164,7 +159,6 @@ public class UserActivity extends AppCompatActivity
         toolbar = findViewById(R.id.toolbar);
         drawerLayout = findViewById(R.id.drawer_layout);
         navigationView = findViewById(R.id.nav_view);
-        originEditText = findViewById(R.id.origin_edit_text);
         destinationEditText = findViewById(R.id.destination_edit_text);
         userProgressBar = findViewById(R.id.user_progress_bar);
         upImageView = findViewById(R.id.up_image_view);
@@ -268,23 +262,6 @@ public class UserActivity extends AppCompatActivity
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.user, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -326,21 +303,8 @@ public class UserActivity extends AppCompatActivity
 
     @Override
     public boolean onTouch(View v, MotionEvent event) {
-        // user touch origin edit text
-        if (v.getId() == R.id.origin_edit_text) {
-            switch (event.getAction()) {
-                case MotionEvent.ACTION_DOWN: {
-                    initAutoCompleteSearchOrigin();
-                    break;
-                }
-                case MotionEvent.ACTION_UP: {
-                    v.performClick();
-                    break;
-                }
-                default:
-                    break;
-            }
-        } else if (v.getId() == R.id.destination_edit_text) {
+        // user touch destination edit text
+        if (v.getId() == R.id.destination_edit_text) {
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN: {
                     initAutoCompleteSearchDestination();
@@ -368,38 +332,10 @@ public class UserActivity extends AppCompatActivity
         startActivityForResult(intent, DESTINATION_AUTOCOMPLETE_REQUEST_CODE);
     }
 
-    private void initAutoCompleteSearchOrigin() {
-        List<Place.Field> fields = Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.ADDRESS);
-
-        // Start the autocomplete intent.
-        Intent intent = new Autocomplete.IntentBuilder(
-                AutocompleteActivityMode.FULLSCREEN, fields)
-                .build(this);
-        startActivityForResult(intent, ORIGIN_AUTOCOMPLETE_REQUEST_CODE);
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == ORIGIN_AUTOCOMPLETE_REQUEST_CODE) {
-
-            if (resultCode == RESULT_OK && data != null) {
-
-                Place place = Autocomplete.getPlaceFromIntent(data);
-                String origin = place.getName();
-                Log.d(TAG, "origin place address: " + place.getAddress());
-                Log.d(TAG, "origin place name: " + place.getName());
-                // set address for origin edit text
-                originEditText.setText(origin);
-            } else if (resultCode == AutocompleteActivity.RESULT_ERROR) {
-                Status status = Autocomplete.getStatusFromIntent(Objects.requireNonNull(data));
-                Log.d(TAG, status.getStatusMessage());
-            } else if (resultCode == RESULT_CANCELED) {
-                // The user canceled the operation.
-                showSnackBar(getString(R.string.user_cancel_operation));
-            }
-
-        } else if (requestCode == DESTINATION_AUTOCOMPLETE_REQUEST_CODE) {
+        if (requestCode == DESTINATION_AUTOCOMPLETE_REQUEST_CODE) {
             if (resultCode == RESULT_OK && data != null) {
 
                 Place place = Autocomplete.getPlaceFromIntent(data);
