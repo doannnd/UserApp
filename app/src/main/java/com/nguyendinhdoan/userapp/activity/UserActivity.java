@@ -38,12 +38,14 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -51,6 +53,8 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
+import com.google.android.libraries.places.api.model.RectangularBounds;
+import com.google.android.libraries.places.api.model.TypeFilter;
 import com.google.android.libraries.places.widget.Autocomplete;
 import com.google.android.libraries.places.widget.AutocompleteActivity;
 import com.google.android.libraries.places.widget.model.AutocompleteActivityMode;
@@ -64,6 +68,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.InstanceIdResult;
 import com.google.gson.Gson;
+import com.google.maps.android.SphericalUtil;
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.MultiplePermissionsReport;
 import com.karumi.dexter.PermissionToken;
@@ -78,6 +83,7 @@ import com.nguyendinhdoan.userapp.model.Token;
 import com.nguyendinhdoan.userapp.model.User;
 import com.nguyendinhdoan.userapp.remote.IFirebaseMessagingAPI;
 import com.nguyendinhdoan.userapp.services.MyFirebaseIdServices;
+import com.nguyendinhdoan.userapp.widget.PlaceDetailFragment;
 
 import java.util.Arrays;
 import java.util.List;
@@ -93,7 +99,6 @@ public class UserActivity extends AppCompatActivity
 
     private static final String PICKUP_REQUEST_TABLE_NAME = "pickup_request";
     private static final String TAG = "USER_ACTIVITY";
-    private static final String CALL_DRIVER = "Call Driver";
     private static final String DRIVER_LOCATION_TABLE_NAME = "driver_location";
     private static final String DRIVER_TABLE_NAME = "drivers";
 
@@ -103,6 +108,11 @@ public class UserActivity extends AppCompatActivity
     private static final long LOCATION_REQUEST_FASTEST_INTERVAL = 3000L;
     private static final float LOCATION_REQUEST_DISPLACEMENT = 10.0F;
     private static final int RADIUS_LOAD_DRIVER_LIMIT = 3; // limit 3km
+    private static final int GOOGLE_MAP_PADDING = 200;
+    private static final String VN_CODE = "VN";
+    private static final double DISTANCE_RESTRICT = 100000;
+    private static final double HEADING_NORTH = 0;
+    private static final double HEADING_SOUTH = 180;
 
     private Toolbar toolbar;
     private DrawerLayout drawerLayout;
@@ -128,6 +138,7 @@ public class UserActivity extends AppCompatActivity
     private String driverId;
 
     private IFirebaseMessagingAPI mServices;
+    private LatLng destinationLocation;
 
     public static Intent start(Context context) {
         return new Intent(context, UserActivity.class);
@@ -325,9 +336,22 @@ public class UserActivity extends AppCompatActivity
         List<Place.Field> fields = Arrays.asList(Place.Field.ID, Place.Field.NAME,
                 Place.Field.ADDRESS,Place.Field.LAT_LNG );
 
+        // restrict places only in city
+        LatLng pinLocation = new LatLng(lastLocation.getLatitude(),
+                lastLocation.getLongitude());
+        /*
+         * distance: meter unit: 100000 = 100 km
+         * heading: 0 - north, 180-south
+         * */
+        LatLng northSide = SphericalUtil.computeOffset(pinLocation, DISTANCE_RESTRICT, HEADING_NORTH);
+        LatLng southSide = SphericalUtil.computeOffset(pinLocation, DISTANCE_RESTRICT, HEADING_SOUTH);
+
         // Start the autocomplete intent.
         Intent intent = new Autocomplete.IntentBuilder(
                 AutocompleteActivityMode.FULLSCREEN, fields)
+                .setTypeFilter(TypeFilter.ADDRESS)
+                .setCountry(VN_CODE)
+                .setLocationBias(RectangularBounds.newInstance(southSide, northSide))
                 .build(this);
         startActivityForResult(intent, DESTINATION_AUTOCOMPLETE_REQUEST_CODE);
     }
@@ -337,15 +361,38 @@ public class UserActivity extends AppCompatActivity
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == DESTINATION_AUTOCOMPLETE_REQUEST_CODE) {
             if (resultCode == RESULT_OK && data != null) {
-
                 Place place = Autocomplete.getPlaceFromIntent(data);
+
                 String destination = place.getName();
+                destinationLocation = place.getLatLng();
                 Log.d(TAG, "origin place address: " + place.getAddress());
                 Log.d(TAG, "origin place name: " + place.getName());
                 // set address for destination edit text
                 destinationEditText.setText(destination);
 
-                // add marker
+                // add marker destination on google map
+                //userGoogleMap.clear();
+
+                // display default marker at destination location
+                Marker destinationMarker =  userGoogleMap.addMarker(
+                        new MarkerOptions().position(destinationLocation)
+                                .title(destination)
+                                .icon(BitmapDescriptorFactory.defaultMarker())
+                );
+
+                destinationMarker.showInfoWindow();
+
+                // padding 2 marker: current location and destination location
+                LatLngBounds.Builder builder = new LatLngBounds.Builder();
+                builder.include(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()));
+                builder.include(destinationLocation);
+
+                // handle display camera
+                LatLngBounds bounds = builder.build();
+                CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngBounds(bounds, GOOGLE_MAP_PADDING);
+                userGoogleMap.moveCamera(cameraUpdate);
+
+
 
             } else if (resultCode == AutocompleteActivity.RESULT_ERROR) {
                 Status status = Autocomplete.getStatusFromIntent(Objects.requireNonNull(data));
@@ -426,18 +473,18 @@ public class UserActivity extends AppCompatActivity
             }
         });
 
-        if (userMarker != null) {
+        /*if (userMarker != null) {
             userMarker.remove(); // if marker existed --> delete
-        }
+        }*/
 
         double userLatitude = lastLocation.getLatitude();
         double userLongitude = lastLocation.getLongitude();
 
         // draw marker on google map
-        userMarker = userGoogleMap.addMarker(new MarkerOptions()
+        /*userMarker = userGoogleMap.addMarker(new MarkerOptions()
                 .position(new LatLng(userLatitude, userLongitude))
                 .title(getString(R.string.title_of_you))
-        );
+        );*/
 
         // display icon default
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
@@ -463,13 +510,13 @@ public class UserActivity extends AppCompatActivity
     private void loadAllAvailableDriver() {
 
         // first remove add marker on map
-        userGoogleMap.clear();
+        //userGoogleMap.clear();
         // after add marker of current location
-        userGoogleMap.addMarker(
+       /* userGoogleMap.addMarker(
                 new MarkerOptions().position(
                         new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude())
                 ).title("You")
-        );
+        );*/
 
         GeoQuery loadAllGeoQuery = driverLocationGeoFire.queryAtLocation(new GeoLocation(
                 lastLocation.getLatitude(), lastLocation.getLongitude()), radiusLoadAllDriver);
@@ -575,6 +622,9 @@ public class UserActivity extends AppCompatActivity
                 // user call driver request a car, user app send current location of user --> driver app
                 sendRequestToDiver(driverId);
             }
+        } else if (v.getId() == R.id.up_image_view) {
+            PlaceDetailFragment placeDetailFragment = PlaceDetailFragment.newInstance("a", "b");
+            placeDetailFragment.show(getSupportFragmentManager(), placeDetailFragment.getTag());
         }
     }
 
@@ -652,7 +702,7 @@ public class UserActivity extends AppCompatActivity
                             if (error == null) {
                                 pickupRequestButton.setText(getString(R.string.call_driver_button_text));
 
-                                if (userMarker != null) {
+                               /* if (userMarker != null) {
                                     userMarker.remove();
                                 }
 
@@ -662,7 +712,7 @@ public class UserActivity extends AppCompatActivity
                                         .position(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()))
                                 );
                                 // always show ...
-                                userMarker.showInfoWindow();
+                                userMarker.showInfoWindow();*/
 
                                 // find Driver when pickup request
                                 findDriver();
