@@ -304,7 +304,6 @@ public class UserActivity extends AppCompatActivity
     public void onMapReady(GoogleMap googleMap) {
 
         userGoogleMap = googleMap;
-
         setupMap();
     }
 
@@ -378,7 +377,9 @@ public class UserActivity extends AppCompatActivity
                 //userGoogleMap.clear();
 
                 // display default marker at destination location
-                displayDestinationMarker();
+                displayDestinationMarker(destination, destinationLocation);
+                // display place detail
+                displayPlaceDetail();
 
             } else if (resultCode == AutocompleteActivity.RESULT_ERROR) {
                 Status status = Autocomplete.getStatusFromIntent(Objects.requireNonNull(data));
@@ -390,7 +391,7 @@ public class UserActivity extends AppCompatActivity
         }
     }
 
-    private void displayDestinationMarker() {
+    private void displayDestinationMarker(String destination, LatLng destinationLocation) {
 
         if (destinationMarker != null) {
             destinationMarker.remove();
@@ -413,9 +414,6 @@ public class UserActivity extends AppCompatActivity
         LatLngBounds bounds = builder.build();
         CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngBounds(bounds, GOOGLE_MAP_PADDING);
         userGoogleMap.moveCamera(cameraUpdate);
-
-        // display place detail
-        displayPlaceDetail();
     }
 
     private void startLocationUpdates() {
@@ -536,7 +534,7 @@ public class UserActivity extends AppCompatActivity
            driverMarker.remove();
        }*/
        if (destination != null) {
-           displayDestinationMarker();
+           displayDestinationMarker(destination, destinationLocation);
        }
 
         GeoQuery loadAllGeoQuery = driverLocationGeoFire.queryAtLocation(new GeoLocation(
@@ -773,7 +771,7 @@ public class UserActivity extends AppCompatActivity
 
             @Override
             public void onGeoQueryReady() {
-                if (!isDriverFound && radiusFindDriver < RADIUS_LOAD_DRIVER_LIMIT) {
+                if (!isDriverFound) {
                     radiusFindDriver++;
                     findDriver();
                 } else {
