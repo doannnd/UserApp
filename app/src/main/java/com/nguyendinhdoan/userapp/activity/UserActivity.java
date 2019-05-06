@@ -78,7 +78,6 @@ import com.nguyendinhdoan.userapp.model.Token;
 import com.nguyendinhdoan.userapp.model.User;
 import com.nguyendinhdoan.userapp.remote.IFirebaseMessagingAPI;
 import com.nguyendinhdoan.userapp.services.MyFirebaseIdServices;
-import com.nguyendinhdoan.userapp.widget.CallDriverFragment;
 
 import java.util.Arrays;
 import java.util.List;
@@ -323,7 +322,8 @@ public class UserActivity extends AppCompatActivity
     }
 
     private void initAutoCompleteSearchDestination() {
-        List<Place.Field> fields = Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.ADDRESS);
+        List<Place.Field> fields = Arrays.asList(Place.Field.ID, Place.Field.NAME,
+                Place.Field.ADDRESS,Place.Field.LAT_LNG );
 
         // Start the autocomplete intent.
         Intent intent = new Autocomplete.IntentBuilder(
@@ -344,6 +344,9 @@ public class UserActivity extends AppCompatActivity
                 Log.d(TAG, "origin place name: " + place.getName());
                 // set address for destination edit text
                 destinationEditText.setText(destination);
+
+                // add marker
+
             } else if (resultCode == AutocompleteActivity.RESULT_ERROR) {
                 Status status = Autocomplete.getStatusFromIntent(Objects.requireNonNull(data));
                 Log.d(TAG, status.getStatusMessage());
@@ -565,21 +568,12 @@ public class UserActivity extends AppCompatActivity
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.up_image_view: {
-                CallDriverFragment callDriverFragment = CallDriverFragment.newInstance(CALL_DRIVER);
-                callDriverFragment.show(getSupportFragmentManager(), callDriverFragment.getTag());
-                break;
-            }
-            case R.id.pickup_request_button: {
-                if (!isDriverFound) {
-                    requestPickupHere();
-                } else {
-                    // user call driver request a car, user app send current location of user --> driver app
-                    sendRequestToDiver(driverId);
-                }
-
-                break;
+        if (v.getId() == R.id.pickup_request_button) {
+            if (!isDriverFound) {
+                requestPickupHere();
+            } else {
+                // user call driver request a car, user app send current location of user --> driver app
+                sendRequestToDiver(driverId);
             }
         }
     }
