@@ -7,6 +7,7 @@ import android.support.design.widget.BottomSheetDialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.nguyendinhdoan.userapp.R;
 
@@ -43,5 +44,18 @@ public class PlaceDetailFragment extends BottomSheetDialogFragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         return inflater.inflate(R.layout.place_detail, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        TextView locationAddressTextView = view.findViewById(R.id.location_address);
+        TextView destinationAddressTextView = view.findViewById(R.id.destination_address);
+        TextView calculateMoneyTextView = view.findViewById(R.id.calculate_money);
+
+        // display data
+        locationAddressTextView.setText(mLocationAddress);
+        destinationAddressTextView.setText(mDestinationAddress);
     }
 }

@@ -615,11 +615,11 @@ public class UserActivity extends AppCompatActivity
     }
 
     private void showSnackBar(String message) {
-        Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_SHORT);
-        View view = snackbar.getView();
+        Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_LONG);
+       /* View view = snackbar.getView();
         view.setBackgroundColor(getResources().getColor(R.color.colorWhite));
         TextView textSnack = view.findViewById(android.support.design.R.id.snackbar_text);
-        textSnack.setTextColor(getResources().getColor(R.color.colorBlack));
+        textSnack.setTextColor(getResources().getColor(R.color.colorBlack));*/
         snackbar.show();
     }
 
@@ -770,9 +770,12 @@ public class UserActivity extends AppCompatActivity
 
             @Override
             public void onGeoQueryReady() {
-                if (!isDriverFound) {
+                if (!isDriverFound && radiusFindDriver < RADIUS_LOAD_DRIVER_LIMIT) {
                     radiusFindDriver++;
                     findDriver();
+                } else {
+                    showSnackBar(getString(R.string.no_driver));
+                    pickupRequestButton.setText(R.string.pickup_request_button_text);
                 }
             }
 

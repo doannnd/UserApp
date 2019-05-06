@@ -37,6 +37,7 @@
             tools:text="London, England" />
 
         <TextView
+            android:id="@+id/calculate_money"
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:drawableStart="@drawable/ic_pay"
