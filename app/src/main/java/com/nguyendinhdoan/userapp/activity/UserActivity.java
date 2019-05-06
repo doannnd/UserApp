@@ -129,6 +129,7 @@ public class UserActivity extends AppCompatActivity
     private FirebaseAuth userAuth;
     private Location lastLocation;
     private Marker userMarker;
+    private Marker driverMarker;
     private GeoFire pickupRequestGeoFire;
     private GeoFire driverLocationGeoFire;
 
@@ -139,6 +140,8 @@ public class UserActivity extends AppCompatActivity
 
     private IFirebaseMessagingAPI mServices;
     private LatLng destinationLocation;
+    private String destination;
+    private Marker destinationMarker;
 
     public static Intent start(Context context) {
         return new Intent(context, UserActivity.class);
@@ -334,7 +337,7 @@ public class UserActivity extends AppCompatActivity
 
     private void initAutoCompleteSearchDestination() {
         List<Place.Field> fields = Arrays.asList(Place.Field.ID, Place.Field.NAME,
-                Place.Field.ADDRESS,Place.Field.LAT_LNG );
+                Place.Field.ADDRESS, Place.Field.LAT_LNG);
 
         // restrict places only in city
         LatLng pinLocation = new LatLng(lastLocation.getLatitude(),
@@ -363,7 +366,7 @@ public class UserActivity extends AppCompatActivity
             if (resultCode == RESULT_OK && data != null) {
                 Place place = Autocomplete.getPlaceFromIntent(data);
 
-                String destination = place.getName();
+                destination = place.getName();
                 destinationLocation = place.getLatLng();
                 Log.d(TAG, "origin place address: " + place.getAddress());
                 Log.d(TAG, "origin place name: " + place.getName());
@@ -374,25 +377,7 @@ public class UserActivity extends AppCompatActivity
                 //userGoogleMap.clear();
 
                 // display default marker at destination location
-                Marker destinationMarker =  userGoogleMap.addMarker(
-                        new MarkerOptions().position(destinationLocation)
-                                .title(destination)
-                                .icon(BitmapDescriptorFactory.defaultMarker())
-                );
-
-                destinationMarker.showInfoWindow();
-
-                // padding 2 marker: current location and destination location
-                LatLngBounds.Builder builder = new LatLngBounds.Builder();
-                builder.include(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()));
-                builder.include(destinationLocation);
-
-                // handle display camera
-                LatLngBounds bounds = builder.build();
-                CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngBounds(bounds, GOOGLE_MAP_PADDING);
-                userGoogleMap.moveCamera(cameraUpdate);
-
-
+                displayDestinationMarker();
 
             } else if (resultCode == AutocompleteActivity.RESULT_ERROR) {
                 Status status = Autocomplete.getStatusFromIntent(Objects.requireNonNull(data));
@@ -402,6 +387,31 @@ public class UserActivity extends AppCompatActivity
                 showSnackBar(getString(R.string.user_cancel_operation));
             }
         }
+    }
+
+    private void displayDestinationMarker() {
+
+        if (destinationMarker != null) {
+            destinationMarker.remove();
+        }
+
+         destinationMarker = userGoogleMap.addMarker(
+                new MarkerOptions().position(destinationLocation)
+                        .title(destination)
+                        .icon(BitmapDescriptorFactory.defaultMarker())
+        );
+
+        destinationMarker.showInfoWindow();
+
+        // padding 2 marker: current location and destination location
+        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+        builder.include(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()));
+        builder.include(destinationLocation);
+
+        // handle display camera
+        LatLngBounds bounds = builder.build();
+        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngBounds(bounds, GOOGLE_MAP_PADDING);
+        userGoogleMap.moveCamera(cameraUpdate);
     }
 
     private void startLocationUpdates() {
@@ -510,13 +520,20 @@ public class UserActivity extends AppCompatActivity
     private void loadAllAvailableDriver() {
 
         // first remove add marker on map
-        //userGoogleMap.clear();
+        userGoogleMap.clear();
         // after add marker of current location
        /* userGoogleMap.addMarker(
                 new MarkerOptions().position(
                         new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude())
                 ).title("You")
         );*/
+
+       /*if (driverMarker != null) {
+           driverMarker.remove();
+       }*/
+       if (destination != null) {
+           displayDestinationMarker();
+       }
 
         GeoQuery loadAllGeoQuery = driverLocationGeoFire.queryAtLocation(new GeoLocation(
                 lastLocation.getLatitude(), lastLocation.getLongitude()), radiusLoadAllDriver);
@@ -540,8 +557,7 @@ public class UserActivity extends AppCompatActivity
                                 User driver = dataSnapshot.getValue(User.class);
                                 if (driver != null) {
                                     // show driver with icon car on google map
-                                    userGoogleMap.addMarker(
-                                            new MarkerOptions()
+                                           userGoogleMap.addMarker( new MarkerOptions()
                                                     .position(new LatLng(location.latitude, location.longitude))
                                                     .flat(true)
                                                     .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_car))
