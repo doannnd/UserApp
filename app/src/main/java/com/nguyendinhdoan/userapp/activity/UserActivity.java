@@ -87,6 +87,7 @@ import com.nguyendinhdoan.userapp.widget.PlaceDetailFragment;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 import retrofit2.Call;
@@ -412,6 +413,9 @@ public class UserActivity extends AppCompatActivity
         LatLngBounds bounds = builder.build();
         CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngBounds(bounds, GOOGLE_MAP_PADDING);
         userGoogleMap.moveCamera(cameraUpdate);
+
+        // display place detail
+        displayPlaceDetail();
     }
 
     private void startLocationUpdates() {
@@ -639,8 +643,7 @@ public class UserActivity extends AppCompatActivity
                 sendRequestToDiver(driverId);
             }
         } else if (v.getId() == R.id.up_image_view) {
-            PlaceDetailFragment placeDetailFragment = PlaceDetailFragment.newInstance("a", "b");
-            placeDetailFragment.show(getSupportFragmentManager(), placeDetailFragment.getTag());
+            displayPlaceDetail();
         }
     }
 
@@ -785,5 +788,16 @@ public class UserActivity extends AppCompatActivity
             }
         });
 
+    }
+
+    private void displayPlaceDetail() {
+        // convert location, latng --> string
+        PlaceDetailFragment placeDetailFragment =
+                PlaceDetailFragment.newInstance(
+                        String.format(Locale.getDefault(), "%f,%f", lastLocation.getLatitude(), lastLocation.getLongitude()),
+                        String.format(Locale.getDefault(), "%f,%f", destinationLocation.latitude, destinationLocation.longitude)
+                );
+
+        placeDetailFragment.show(getSupportFragmentManager(), placeDetailFragment.getTag());
     }
 }
