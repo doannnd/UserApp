@@ -109,7 +109,7 @@ public class UserActivity extends AppCompatActivity
     private static final long LOCATION_REQUEST_FASTEST_INTERVAL = 3000L;
     private static final float LOCATION_REQUEST_DISPLACEMENT = 10.0F;
     private static final int RADIUS_LOAD_DRIVER_LIMIT = 3; // limit 3km
-    private static final int GOOGLE_MAP_PADDING = 200;
+    private static final int GOOGLE_MAP_PADDING = 150;
     private static final String VN_CODE = "VN";
     private static final double DISTANCE_RESTRICT = 100000;
     private static final double HEADING_NORTH = 0;
@@ -641,7 +641,9 @@ public class UserActivity extends AppCompatActivity
                 sendRequestToDiver(driverId);
             }
         } else if (v.getId() == R.id.up_image_view) {
-            displayPlaceDetail();
+            if (destination != null) {
+                displayPlaceDetail();
+            }
         }
     }
 
@@ -771,7 +773,7 @@ public class UserActivity extends AppCompatActivity
 
             @Override
             public void onGeoQueryReady() {
-                if (!isDriverFound) {
+                if (!isDriverFound && radiusFindDriver < RADIUS_LOAD_DRIVER_LIMIT) {
                     radiusFindDriver++;
                     findDriver();
                 } else {
