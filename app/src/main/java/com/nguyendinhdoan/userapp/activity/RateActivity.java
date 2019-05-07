@@ -1,10 +1,8 @@
 package com.nguyendinhdoan.userapp.activity;
 
-import android.provider.Telephony;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentActivity;
-import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -44,6 +42,8 @@ public class RateActivity extends FragmentActivity implements RatingDialogListen
 
         driverTable = FirebaseDatabase.getInstance().getReference(DRIVER_TABLE);
         rateDriverTable = FirebaseDatabase.getInstance().getReference(RATE_DRIVER_TABLE);
+
+        showDialog();
     }
 
     private void showDialog() {
@@ -56,7 +56,7 @@ public class RateActivity extends FragmentActivity implements RatingDialogListen
                 .setTitle("Rate for driver")
                 .setDescription("Please select some stars and give your feedback")
                 .setCommentInputEnabled(true)
-                .setDefaultComment("This app is pretty cool !")
+                .setDefaultComment("")
                 .setStarColor(R.color.starColor)
                 .setNoteDescriptionTextColor(R.color.noteDescriptionTextColor)
                 .setTitleTextColor(R.color.titleTextColor)
@@ -74,12 +74,12 @@ public class RateActivity extends FragmentActivity implements RatingDialogListen
 
     @Override
     public void onNegativeButtonClicked() {
-
+        Toast.makeText(this, "cancel", Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onNeutralButtonClicked() {
-
+        Toast.makeText(this, "later", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -87,7 +87,6 @@ public class RateActivity extends FragmentActivity implements RatingDialogListen
         RateDriver rateDriver = new RateDriver(String.valueOf(rates), comments);
 
         rateDriverTable.child(Common.driverId)
-                .child(FirebaseAuth.getInstance().getCurrentUser().getUid())
                 .push()
                 .setValue(rateDriver)
                 .addOnCompleteListener(new OnCompleteListener<Void>() {
@@ -105,7 +104,7 @@ public class RateActivity extends FragmentActivity implements RatingDialogListen
                                             for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
                                                 RateDriver rateDriver1 = postSnapshot.getValue(RateDriver.class);
                                                 sumStar += Double.parseDouble(rateDriver1.getRates());
-                                                count ++;
+                                                count++;
                                             }
                                             double averageStar = sumStar / count;
                                             DecimalFormat df = new DecimalFormat("#.#");
@@ -136,7 +135,7 @@ public class RateActivity extends FragmentActivity implements RatingDialogListen
                                     });
 
                         } else {
-
+                            Toast.makeText(RateActivity.this, "error occur", Toast.LENGTH_SHORT).show();
                         }
                     }
                 });

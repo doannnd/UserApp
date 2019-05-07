@@ -16,6 +16,8 @@ import android.widget.Toast;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 import com.nguyendinhdoan.userapp.R;
+import com.nguyendinhdoan.userapp.activity.RateActivity;
+import com.nguyendinhdoan.userapp.model.RateDriver;
 import com.nguyendinhdoan.userapp.utils.NotificationUtils;
 
 /**
@@ -44,9 +46,17 @@ public class MyFirebaseMessaging extends FirebaseMessagingService {
                 } else {
                     showArrivedNotification(remoteMessage.getNotification().getBody());
                 }
+            } else if (remoteMessage.getNotification().getTitle().equals("DropOff")) {
+                openRateDriverActivity(remoteMessage.getNotification().getBody());
             }
         }
 
+    }
+
+    private void openRateDriverActivity(String body) {
+        Intent intent = new Intent(this, RateActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
