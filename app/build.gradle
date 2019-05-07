@@ -24,6 +24,7 @@ dependencies {
     // google support library
     implementation "com.android.support:appcompat-v7:$support_library"
     implementation "com.android.support:design:$support_library"
+    implementation "com.android.support:exifinterface:$support_library"
     implementation "com.android.support:support-media-compat:$support_library"
     implementation "com.android.support:support-v4:$support_library"
     implementation "com.android.support.constraint:constraint-layout:$constaint_layout"
@@ -44,6 +45,11 @@ dependencies {
     // dexter
     implementation 'com.karumi:dexter:5.0.0'
     implementation 'com.firebase:geofire-android:2.3.1'
+    implementation 'de.hdodenhof:circleimageview:3.0.0'
+    implementation 'com.github.bumptech.glide:glide:4.9.0'
+    annotationProcessor 'com.github.bumptech.glide:compiler:4.9.0'
+    implementation 'com.github.d-max:spots-dialog:1.1@aar'
+    implementation 'com.theartofdev.edmodo:android-image-cropper:2.7.0'
     // testing
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'

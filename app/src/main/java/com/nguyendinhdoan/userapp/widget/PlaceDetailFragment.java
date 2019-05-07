@@ -10,7 +10,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.google.android.gms.maps.model.LatLng;
 import com.nguyendinhdoan.userapp.R;
 import com.nguyendinhdoan.userapp.common.Common;
 import com.nguyendinhdoan.userapp.remote.IGoogleAPI;
@@ -45,7 +44,7 @@ public class PlaceDetailFragment extends BottomSheetDialogFragment {
     private String mLocationAddress;
     private String mDestinationAddress;
     
-    private IGoogleAPI mServies;
+    private IGoogleAPI mServices;
 
     public static PlaceDetailFragment newInstance(String locationAddress, String destinationAddress) {
         PlaceDetailFragment placeDetailFragment = new PlaceDetailFragment();
@@ -82,7 +81,7 @@ public class PlaceDetailFragment extends BottomSheetDialogFragment {
         destinationAddressTextView = view.findViewById(R.id.destination_address);
         calculateMoneyTextView  = view.findViewById(R.id.calculate_money);
 
-        mServies = Common.getGoogleAPI();
+        mServices = Common.getGoogleAPI();
         displayPlaceDetail(mLocationAddress, mDestinationAddress);
     }
 
@@ -90,7 +89,7 @@ public class PlaceDetailFragment extends BottomSheetDialogFragment {
         try {
             String userCallURL = Common.directionURL(mLocationAddress, mDestinationAddress);
 
-            mServies.getDirectionPath(userCallURL)
+            mServices.getDirectionPath(userCallURL)
                     .enqueue(new Callback<String>() {
                         @Override
                         public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {

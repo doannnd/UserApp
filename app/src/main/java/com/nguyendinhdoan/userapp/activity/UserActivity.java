@@ -279,25 +279,41 @@ public class UserActivity extends AppCompatActivity
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        // Handle navigation view item clicks here.
-        int id = item.getItemId();
 
-        if (id == R.id.nav_home) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
-
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_tools) {
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
-
+        switch (item.getItemId()) {
+            case R.id.nav_trip_history: {
+                break;
+            }
+            case R.id.nav_edit_profile: {
+                //showDialogUpdateProfile();
+                break;
+            }
+            case R.id.nav_way_bill: {
+                break;
+            }
+            case R.id.nav_help: {
+                break;
+            }
+            case R.id.nav_settings: {
+                break;
+            }
+            case R.id.nav_sign_out: {
+                signOut();
+                break;
+            }
         }
 
         drawerLayout.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void signOut() {
+        userAuth.signOut();
+        // jump to login activity
+        Intent intentLogin = LoginActivity.start(this);
+        intentLogin.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intentLogin);
+        finish();
     }
 
     @Override
