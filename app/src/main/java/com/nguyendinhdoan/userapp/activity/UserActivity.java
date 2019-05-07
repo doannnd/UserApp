@@ -163,8 +163,6 @@ public class UserActivity extends AppCompatActivity
 
     private int radiusLoadAllDriver = 1; // 1km
     private int radiusFindDriver = 1; // 1km
-    private boolean isDriverFound = false;
-    private String driverId;
 
     private IFirebaseMessagingAPI mServices;
     private LatLng destinationLocation;
@@ -917,11 +915,11 @@ public class UserActivity extends AppCompatActivity
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.pickup_request_button) {
-            if (!isDriverFound) {
+            if (!Common.isDriverFound) {
                 requestPickupHere();
             } else {
                 // user call driver request a car, user app send current location of user --> driver app
-                sendRequestToDiver(driverId);
+                sendRequestToDiver(Common.driverId);
             }
         } else if (v.getId() == R.id.up_image_view) {
             if (destination != null) {
@@ -1028,7 +1026,7 @@ public class UserActivity extends AppCompatActivity
     }
 
     private void findDriver() {
-        GeoQuery findGeoQuery = driverLocationGeoFire.queryAtLocation(
+        final GeoQuery findGeoQuery = driverLocationGeoFire.queryAtLocation(
                 new GeoLocation(lastLocation.getLatitude(), lastLocation.getLongitude()), radiusFindDriver
         );
 
@@ -1036,9 +1034,9 @@ public class UserActivity extends AppCompatActivity
         findGeoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
             @Override
             public void onKeyEntered(String key, GeoLocation location) {
-                if (!isDriverFound) {
-                    isDriverFound = true;
-                    driverId = key;
+                if (!Common.isDriverFound) {
+                    Common.isDriverFound = true;
+                    Common.driverId = key;
                     pickupRequestButton.setText(getString(R.string.call_driver_replace));
                     Toast.makeText(UserActivity.this, "" + key, Toast.LENGTH_SHORT).show();
                 }
@@ -1056,12 +1054,15 @@ public class UserActivity extends AppCompatActivity
 
             @Override
             public void onGeoQueryReady() {
-                if (!isDriverFound && radiusFindDriver < RADIUS_LOAD_DRIVER_LIMIT) {
+                if (!Common.isDriverFound && radiusFindDriver < RADIUS_LOAD_DRIVER_LIMIT) {
                     radiusFindDriver++;
                     findDriver();
                 } else {
-                    showSnackBar(getString(R.string.no_driver));
-                    pickupRequestButton.setText(R.string.pickup_request_button_text);
+                    if (!Common.isDriverFound) {
+                        showSnackBar(getString(R.string.no_driver));
+                        pickupRequestButton.setText(R.string.pickup_request_button_text);
+                        //findGeoQuery.removeAllListeners();
+                    }
                 }
             }
 
