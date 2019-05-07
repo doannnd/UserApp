@@ -11,6 +11,8 @@ import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 
+import com.nguyendinhdoan.userapp.R;
+
 public class NotificationUtils extends ContextWrapper {
 
     private static final String USER_APP_ID = "com.nguyendinhdoan.userapp";
@@ -37,7 +39,7 @@ public class NotificationUtils extends ContextWrapper {
         getManager().createNotificationChannel(notificationChannel);
     }
 
-    private NotificationManager getManager() {
+    public NotificationManager getManager() {
         if (manager != null) {
             manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         }
@@ -52,6 +54,7 @@ public class NotificationUtils extends ContextWrapper {
                 .setContentTitle(title)
                 .setAutoCancel(true)
                 .setSound(soundUri)
-                .setContentIntent(contentIntent);
+                .setContentIntent(contentIntent)
+                .setSmallIcon(R.drawable.ic_car);
     }
 }
