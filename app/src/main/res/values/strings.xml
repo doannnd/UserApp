@@ -75,5 +75,14 @@
     <string name="menu_edit_profile">Edit profile</string>
     <string name="icon_star">icon star</string>
     <string name="test_star">4.5</string>
+    <string name="edit_profile">Update</string>
+    <string name="permission_denied">permission_denied</string>
+    <string name="update_infor_success">update infor success</string>
+    <string name="update_infor_failed">update infor failed</string>
+    <string name="edit_button_dialog">Edit</string>
+    <string name="cancel_button_dialog">Cancel</string>
+    <string name="error_upload_image">error upload image</string>
+    <string name="upload_avatar_success">upload avatar success</string>
+    <string name="upload_avatar_failed">upload avatar failed</string>
 
 </resources>

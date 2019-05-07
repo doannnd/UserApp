@@ -8,6 +8,7 @@ public class User implements Parcelable {
     private String name;
     private String email;
     private String phone;
+    private String avatarUrl;
 
     public User(String name, String email, String phone) {
         this.name = name;
@@ -16,6 +17,14 @@ public class User implements Parcelable {
     }
 
     public User() {
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
     }
 
     public String getName() {
