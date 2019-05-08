@@ -88,6 +88,7 @@ import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 import com.karumi.dexter.listener.single.PermissionListener;
 import com.nguyendinhdoan.userapp.R;
 import com.nguyendinhdoan.userapp.common.Common;
+import com.nguyendinhdoan.userapp.model.Body;
 import com.nguyendinhdoan.userapp.model.Notification;
 import com.nguyendinhdoan.userapp.model.Result;
 import com.nguyendinhdoan.userapp.model.Sender;
@@ -678,7 +679,7 @@ public class UserActivity extends AppCompatActivity
             destinationMarker.remove();
         }
 
-         destinationMarker = userGoogleMap.addMarker(
+        destinationMarker = userGoogleMap.addMarker(
                 new MarkerOptions().position(destinationLocation)
                         .title(destination)
                         .icon(BitmapDescriptorFactory.defaultMarker())
@@ -814,9 +815,9 @@ public class UserActivity extends AppCompatActivity
        /*if (driverMarker != null) {
            driverMarker.remove();
        }*/
-       if (destination != null) {
-           displayDestinationMarker(destination, destinationLocation);
-       }
+        if (destination != null) {
+            displayDestinationMarker(destination, destinationLocation);
+        }
 
         GeoQuery loadAllGeoQuery = driverLocationGeoFire.queryAtLocation(new GeoLocation(
                 lastLocation.getLatitude(), lastLocation.getLongitude()), radiusLoadAllDriver);
@@ -840,12 +841,12 @@ public class UserActivity extends AppCompatActivity
                                 User driver = dataSnapshot.getValue(User.class);
                                 if (driver != null) {
                                     // show driver with icon car on google map
-                                           userGoogleMap.addMarker( new MarkerOptions()
-                                                    .position(new LatLng(location.latitude, location.longitude))
-                                                    .flat(true)
-                                                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_car))
-                                                    .title(driver.getName())
-                                                    .snippet(getString(R.string.driver_phone, driver.getPhone()))
+                                    userGoogleMap.addMarker(new MarkerOptions()
+                                            .position(new LatLng(location.latitude, location.longitude))
+                                            .flat(true)
+                                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_car))
+                                            .title(driver.getName())
+                                            .snippet(getString(R.string.driver_phone, driver.getPhone()))
                                     );
                                 }
 
@@ -939,11 +940,19 @@ public class UserActivity extends AppCompatActivity
                         for (DataSnapshot tokenSnapshot : dataSnapshot.getChildren()) {
                             // get token object from database with key is driverId
                             Token token = tokenSnapshot.getValue(Token.class);
-
-                            // convert LatLng to json , next send json to driver app
-                            String jsonLocation = new Gson().toJson(
-                                    new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude())
-                            );
+                            String jsonLocation;
+                            // if user pickup request ==> send destination to driver app
+                            if (destinationLocation != null && destination != null) {
+                                Body body = new Body(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()),
+                                        destinationLocation, destination);
+                                jsonLocation = new Gson().toJson(body);
+                            } else {
+                                // convert LatLng to json , next send json to driver app
+                                // if no send current location of user
+                                jsonLocation = new Gson().toJson(
+                                        new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude())
+                                );
+                            }
 
                             // send notification for driver app [jsonLocation - body] and title is user id token
                             FirebaseUser user = userAuth.getCurrentUser();
