@@ -13,6 +13,7 @@ import android.os.Bundle;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputEditText;
@@ -31,6 +32,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -179,6 +181,8 @@ public class UserActivity extends AppCompatActivity
     private StorageReference storageReference;
     private AlertDialog loading;
 
+    private BottomSheetBehavior callDriverBehavior;
+
     public static Intent start(Context context) {
         return new Intent(context, UserActivity.class);
     }
@@ -218,6 +222,9 @@ public class UserActivity extends AppCompatActivity
         userProgressBar = findViewById(R.id.user_progress_bar);
         upImageView = findViewById(R.id.up_image_view);
         pickupRequestButton = findViewById(R.id.pickup_request_button);
+
+        View view = findViewById(R.id.call_driver_bottom_sheet);
+        callDriverBehavior = BottomSheetBehavior.from(view);
     }
 
     private void setupUI() {
@@ -296,6 +303,13 @@ public class UserActivity extends AppCompatActivity
         if (supportMapFragment != null) {
             supportMapFragment.getMapAsync(this);
         }
+
+        // add my button location in bottom right
+        View locationButton = ((View) supportMapFragment.getView().findViewById(Integer.parseInt("1")).getParent()).findViewById(Integer.parseInt("2"));
+        RelativeLayout.LayoutParams rlp = (RelativeLayout.LayoutParams) locationButton.getLayoutParams();
+        rlp.addRule(RelativeLayout.ALIGN_PARENT_TOP, 0);
+        rlp.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
+        rlp.setMargins(0, 0, 30, 30);
     }
 
     private void setupNavigationView() {
@@ -788,6 +802,8 @@ public class UserActivity extends AppCompatActivity
 
         // icon current location of google
         userGoogleMap.setMyLocationEnabled(true);
+        // icon ..
+        userGoogleMap.getUiSettings().setMyLocationButtonEnabled(true);
 
         // move camera
         userGoogleMap.moveCamera(
