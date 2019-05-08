@@ -11,6 +11,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.widget.Toast;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
@@ -25,6 +26,9 @@ import com.nguyendinhdoan.userapp.utils.NotificationUtils;
  */
 public class MyFirebaseMessaging extends FirebaseMessagingService {
 
+    public static final String MESSAGE_KEY = "MESSAGE_KEY";
+    public static final String MESSAGE_DRIVER_KEY = "MESSAGE_DRIVER_KEY";
+
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
@@ -32,15 +36,19 @@ public class MyFirebaseMessaging extends FirebaseMessagingService {
         if (remoteMessage.getNotification() != null) {
             if (remoteMessage.getNotification().getTitle().equals("cancel")) {
                 final String message = remoteMessage.getNotification().getBody();
-                Handler handler = new Handler(Looper.getMainLooper());
+               /* Handler handler = new Handler(Looper.getMainLooper());
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
                         // show message on user interface
                         Toast.makeText(MyFirebaseMessaging.this, message, Toast.LENGTH_SHORT).show();
                     }
-                });
+                });*/
+
+                sendMessageToUserActivity("cancel");
             } else if (remoteMessage.getNotification().getTitle().equals("accept")) {
+                sendMessageToUserActivity("accept");
+            } else if (remoteMessage.getNotification().getTitle().equals("Arrived")) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     showArrivedNotificationAPI26(remoteMessage.getNotification().getBody());
                 } else {
@@ -51,6 +59,12 @@ public class MyFirebaseMessaging extends FirebaseMessagingService {
             }
         }
 
+    }
+
+    private void sendMessageToUserActivity(String message) {
+        Intent intent = new Intent(MESSAGE_DRIVER_KEY);
+        intent.putExtra(MESSAGE_KEY, message);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
     private void openRateDriverActivity(String body) {

@@ -3,10 +3,13 @@ package com.nguyendinhdoan.userapp.activity;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
@@ -18,6 +21,8 @@ import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputEditText;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -98,6 +103,7 @@ import com.nguyendinhdoan.userapp.model.Token;
 import com.nguyendinhdoan.userapp.model.User;
 import com.nguyendinhdoan.userapp.remote.IFirebaseMessagingAPI;
 import com.nguyendinhdoan.userapp.services.MyFirebaseIdServices;
+import com.nguyendinhdoan.userapp.services.MyFirebaseMessaging;
 import com.nguyendinhdoan.userapp.utils.CommonUtils;
 import com.nguyendinhdoan.userapp.widget.PlaceDetailFragment;
 import com.theartofdev.edmodo.cropper.CropImage;
@@ -186,8 +192,27 @@ public class UserActivity extends AppCompatActivity
     private TextView driverStarTextView;
     private TextView driverPhoneTextView;
     private Button driverCallButton;
+    private TextView resultCallDriverTextView;
 
     private String phoneNumberDriver;
+
+    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String message = intent.getStringExtra(MyFirebaseMessaging.MESSAGE_KEY);
+            if (message.equals("cancel")) {
+                Common.driverId = "";
+                Common.isDriverFound = false;
+                pickupRequestButton.setText(getString(R.string.pickup_request_button_text));
+                resultCallDriverTextView.setText(getString(R.string.driver_decline_request));
+                resultCallDriverTextView.setTextColor(Color.RED);
+            } else if (message.equals("accept")) {
+                pickupRequestButton.setText(getString(R.string.pickup_request_button_text));
+                resultCallDriverTextView.setText(getString(R.string.driver_accept_request));
+                resultCallDriverTextView.setTextColor(Color.BLUE);
+            }
+        }
+    };
 
     public static Intent start(Context context) {
         return new Intent(context, UserActivity.class);
@@ -199,9 +224,13 @@ public class UserActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user);
 
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+                mMessageReceiver, new IntentFilter(MyFirebaseMessaging.MESSAGE_DRIVER_KEY));
+
         initViews();
         setupUI();
         addEvents();
+
     }
 
     private void setupLoading() {
@@ -237,6 +266,7 @@ public class UserActivity extends AppCompatActivity
         driverStarTextView = view.findViewById(R.id.driver_star_text_view);
         driverPhoneTextView = view.findViewById(R.id.driver_phone_text_view);
         driverCallButton = view.findViewById(R.id.driver_call_button);
+        resultCallDriverTextView = view.findViewById(R.id.result_call_driver_text_view);
     }
 
     private void setupUI() {
@@ -928,8 +958,11 @@ public class UserActivity extends AppCompatActivity
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
+
         stopLocationUpdates();
+        userGoogleMap.clear();
+
+        super.onDestroy();
     }
 
     @Override
@@ -938,6 +971,7 @@ public class UserActivity extends AppCompatActivity
             case R.id.pickup_request_button: {
                 if (!Common.isDriverFound) {
                     requestPickupHere();
+                    resultCallDriverTextView.setText("");
                 } /*else {
                 // user call driver request a car, user app send current location of user --> driver app
                 sendRequestToDiver(Common.driverId);
@@ -956,7 +990,9 @@ public class UserActivity extends AppCompatActivity
             }
             case R.id.driver_call_button: {
                 // user call driver request a car, user app send current location of user --> driver app
-                //sendRequestToDiver(Common.driverId);
+                if (Common.driverId != null) {
+                    sendRequestToDiver(Common.driverId);
+                }
                 break;
             }
         }
@@ -1035,6 +1071,8 @@ public class UserActivity extends AppCompatActivity
                                                                    @NonNull Response<Result> response) {
                                                 if (response.isSuccessful()) {
                                                     showSnackBar(getString(R.string.send_message_to_driver_success));
+                                                    callDriverBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                                                    driverCallButton.setEnabled(false);
                                                 } else {
                                                     showSnackBar(getString(R.string.send_message_to_driver_error));
                                                 }
