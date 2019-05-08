@@ -182,6 +182,12 @@ public class UserActivity extends AppCompatActivity
     private AlertDialog loading;
 
     private BottomSheetBehavior callDriverBehavior;
+    private TextView driverNameTextView;
+    private TextView driverStarTextView;
+    private TextView driverPhoneTextView;
+    private Button driverCallButton;
+
+    private String phoneNumberDriver;
 
     public static Intent start(Context context) {
         return new Intent(context, UserActivity.class);
@@ -211,6 +217,8 @@ public class UserActivity extends AppCompatActivity
         destinationEditText.setOnTouchListener(this);
         upImageView.setOnClickListener(this);
         pickupRequestButton.setOnClickListener(this);
+        driverPhoneTextView.setOnClickListener(this);
+        driverCallButton.setOnClickListener(this);
     }
 
     private void initViews() {
@@ -225,6 +233,10 @@ public class UserActivity extends AppCompatActivity
 
         View view = findViewById(R.id.call_driver_bottom_sheet);
         callDriverBehavior = BottomSheetBehavior.from(view);
+        driverNameTextView = view.findViewById(R.id.driver_name_text_view);
+        driverStarTextView = view.findViewById(R.id.driver_star_text_view);
+        driverPhoneTextView = view.findViewById(R.id.driver_phone_text_view);
+        driverCallButton = view.findViewById(R.id.driver_call_button);
     }
 
     private void setupUI() {
@@ -383,15 +395,6 @@ public class UserActivity extends AppCompatActivity
             }
             case R.id.nav_edit_profile: {
                 showDialogUpdateProfile();
-                break;
-            }
-            case R.id.nav_way_bill: {
-                break;
-            }
-            case R.id.nav_help: {
-                break;
-            }
-            case R.id.nav_settings: {
                 break;
             }
             case R.id.nav_sign_out: {
@@ -931,18 +934,59 @@ public class UserActivity extends AppCompatActivity
 
     @Override
     public void onClick(View v) {
-        if (v.getId() == R.id.pickup_request_button) {
-            if (!Common.isDriverFound) {
-                requestPickupHere();
-            } else {
+        switch (v.getId()) {
+            case R.id.pickup_request_button: {
+                if (!Common.isDriverFound) {
+                    requestPickupHere();
+                } /*else {
                 // user call driver request a car, user app send current location of user --> driver app
                 sendRequestToDiver(Common.driverId);
+            }*/
+                break;
             }
-        } else if (v.getId() == R.id.up_image_view) {
-            if (destination != null) {
-                displayPlaceDetail();
+            case R.id.up_image_view: {
+                if (destination != null) {
+                    displayPlaceDetail();
+                }
+                break;
+            }
+            case R.id.driver_phone_text_view: {
+                callPhoneToDriver(phoneNumberDriver);
+                break;
+            }
+            case R.id.driver_call_button: {
+                // user call driver request a car, user app send current location of user --> driver app
+                //sendRequestToDiver(Common.driverId);
+                break;
             }
         }
+
+    }
+
+    private void callPhoneToDriver(final String phoneNumberDriver) {
+        Dexter.withActivity(this)
+                .withPermission(Manifest.permission.CALL_PHONE)
+                .withListener(new PermissionListener() {
+                    @Override
+                    public void onPermissionGranted(PermissionGrantedResponse response) {
+                        if (ActivityCompat.checkSelfPermission(UserActivity.this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+                            return;
+                        }
+                        Intent intentCall = new Intent(Intent.ACTION_CALL);
+                        intentCall.setData(Uri.parse("tel:" + phoneNumberDriver));
+                        startActivity(intentCall);
+                    }
+
+                    @Override
+                    public void onPermissionDenied(PermissionDeniedResponse response) {
+                        showSnackBar(getString(R.string.permission_denied));
+                    }
+
+                    @Override
+                    public void onPermissionRationaleShouldBeShown(PermissionRequest permission, PermissionToken token) {
+                        token.continuePermissionRequest();
+                    }
+                }).check();
     }
 
     private void sendRequestToDiver(String driverId) {
@@ -1062,8 +1106,33 @@ public class UserActivity extends AppCompatActivity
                 if (!Common.isDriverFound) {
                     Common.isDriverFound = true;
                     Common.driverId = key;
-                    pickupRequestButton.setText(getString(R.string.call_driver_replace));
                     Toast.makeText(UserActivity.this, "" + key, Toast.LENGTH_SHORT).show();
+
+                    DatabaseReference driverTable = FirebaseDatabase.getInstance().getReference(DRIVER_TABLE_NAME)
+                            .child(key);
+                    driverTable.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            User driverPickupRequest = dataSnapshot.getValue(User.class);
+                            if (driverPickupRequest != null) {
+                                driverNameTextView.setText(driverPickupRequest.getName());
+                                if (driverPickupRequest.getRates() == null) {
+                                    driverStarTextView.setText("No");
+                                } else {
+                                    driverStarTextView.setText(driverPickupRequest.getRates());
+                                }
+                                phoneNumberDriver = driverPickupRequest.getPhone();
+                                driverPhoneTextView.setText(phoneNumberDriver);
+                                // show call detail
+                                callDriverBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                        }
+                    });
                 }
             }
 
@@ -1085,7 +1154,6 @@ public class UserActivity extends AppCompatActivity
                 } else {
                     if (!Common.isDriverFound) {
                         showSnackBar(getString(R.string.no_driver));
-                        pickupRequestButton.setText(R.string.pickup_request_button_text);
                         //findGeoQuery.removeAllListeners();
                     }
                 }

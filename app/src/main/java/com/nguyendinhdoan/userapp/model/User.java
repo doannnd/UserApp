@@ -9,6 +9,7 @@ public class User implements Parcelable {
     private String email;
     private String phone;
     private String avatarUrl;
+    private String rates;
 
     public User(String name, String email, String phone) {
         this.name = name;
@@ -17,6 +18,18 @@ public class User implements Parcelable {
     }
 
     public User() {
+    }
+
+    public String getRates() {
+        return rates;
+    }
+
+    public void setRates(String rates) {
+        this.rates = rates;
+    }
+
+    public static Creator<User> getCREATOR() {
+        return CREATOR;
     }
 
     public String getAvatarUrl() {

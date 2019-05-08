@@ -110,6 +110,7 @@
                 android:layout_marginTop="16dp"
                 android:fontFamily="@font/amaranth"
                 android:drawableStart="@drawable/ic_phone"
+                android:drawablePadding="8dp"
                 android:text="@string/test_phone_driver"
                 android:textSize="18sp"
                 android:textColor="#444"/>
