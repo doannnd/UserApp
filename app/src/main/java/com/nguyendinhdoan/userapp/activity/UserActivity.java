@@ -222,6 +222,8 @@ public class UserActivity extends AppCompatActivity
                 driverCallButton.setEnabled(false);
             } else if (message.equals("DropOff")) {
                 showDialog();
+                resultCallDriverTextView.setText("");
+                pickupRequestButton.setEnabled(true);
             }
         }
     };
@@ -408,6 +410,7 @@ public class UserActivity extends AppCompatActivity
         View headerView = navigationView.getHeaderView(0);
         final TextView nameTextView = headerView.findViewById(R.id.name_text_view);
         final TextView emailTextView = headerView.findViewById(R.id.email_text_view);
+        final TextView starTextView = headerView.findViewById(R.id.star_text_view);
         final CircleImageView avatarImageView = headerView.findViewById(R.id.avatar_image_view);
 
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
@@ -426,6 +429,7 @@ public class UserActivity extends AppCompatActivity
                     if (Common.currentUser != null) {
                         nameTextView.setText(Common.currentUser.getName());
                         emailTextView.setText(Common.currentUser.getEmail());
+                        starTextView.setText(Common.currentUser.getRates());
                         Glide.with(UserActivity.this).load(Common.currentUser.getAvatarUrl())
                                 .placeholder(R.drawable.ic_profile)
                                 .into(avatarImageView);
