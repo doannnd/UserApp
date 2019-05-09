@@ -4,6 +4,8 @@
     <color name="colorPrimaryDark">#00574B</color>
     <color name="colorAccent">#000000</color>
 
+    <color name="colorBackgroundUserCall">#263238</color>
+
     <color name="colorWhite">#FFFFFF</color>
     <color name="colorBlack">#000000</color>
 

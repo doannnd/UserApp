@@ -210,6 +210,7 @@ public class UserActivity extends AppCompatActivity
                 pickupRequestButton.setText(getString(R.string.pickup_request_button_text));
                 resultCallDriverTextView.setText(getString(R.string.driver_accept_request));
                 resultCallDriverTextView.setTextColor(Color.BLUE);
+                driverCallButton.setEnabled(false);
             }
         }
     };
@@ -961,7 +962,7 @@ public class UserActivity extends AppCompatActivity
 
         stopLocationUpdates();
         userGoogleMap.clear();
-
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
         super.onDestroy();
     }
 
@@ -1072,7 +1073,6 @@ public class UserActivity extends AppCompatActivity
                                                 if (response.isSuccessful()) {
                                                     showSnackBar(getString(R.string.send_message_to_driver_success));
                                                     callDriverBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-                                                    driverCallButton.setEnabled(false);
                                                 } else {
                                                     showSnackBar(getString(R.string.send_message_to_driver_error));
                                                 }
