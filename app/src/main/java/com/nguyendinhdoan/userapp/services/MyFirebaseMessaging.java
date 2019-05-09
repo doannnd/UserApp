@@ -7,18 +7,13 @@ import android.content.Intent;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
-import android.os.Handler;
-import android.os.Looper;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
-import android.widget.Toast;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 import com.nguyendinhdoan.userapp.R;
-import com.nguyendinhdoan.userapp.activity.RateActivity;
-import com.nguyendinhdoan.userapp.model.RateDriver;
 import com.nguyendinhdoan.userapp.utils.NotificationUtils;
 
 /**
@@ -34,8 +29,9 @@ public class MyFirebaseMessaging extends FirebaseMessagingService {
         super.onMessageReceived(remoteMessage);
 
         if (remoteMessage.getNotification() != null) {
-            if (remoteMessage.getNotification().getTitle().equals("cancel")) {
-                final String message = remoteMessage.getNotification().getBody();
+            String title = remoteMessage.getNotification().getTitle();
+            switch (title) {
+                case "cancel":
                /* Handler handler = new Handler(Looper.getMainLooper());
                 handler.post(new Runnable() {
                     @Override
@@ -45,17 +41,22 @@ public class MyFirebaseMessaging extends FirebaseMessagingService {
                     }
                 });*/
 
-                sendMessageToUserActivity("cancel");
-            } else if (remoteMessage.getNotification().getTitle().equals("accept")) {
-                sendMessageToUserActivity("accept");
-            } else if (remoteMessage.getNotification().getTitle().equals("Arrived")) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    showArrivedNotificationAPI26(remoteMessage.getNotification().getBody());
-                } else {
-                    showArrivedNotification(remoteMessage.getNotification().getBody());
-                }
-            } else if (remoteMessage.getNotification().getTitle().equals("DropOff")) {
-                openRateDriverActivity(remoteMessage.getNotification().getBody());
+                    sendMessageToUserActivity("cancel");
+                    break;
+                case "accept":
+                    sendMessageToUserActivity("accept");
+                    break;
+                case "Arrived":
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        showArrivedNotificationAPI26(remoteMessage.getNotification().getBody());
+                    } else {
+                        showArrivedNotification(remoteMessage.getNotification().getBody());
+                    }
+                    break;
+                case "DropOff":
+                    //openRateDriverActivity(remoteMessage.getNotification().getBody());
+                    sendMessageToUserActivity("DropOff");
+                    break;
             }
         }
 
@@ -67,11 +68,11 @@ public class MyFirebaseMessaging extends FirebaseMessagingService {
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
-    private void openRateDriverActivity(String body) {
+    /*private void openRateDriverActivity(String body) {
         Intent intent = new Intent(this, RateActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
-    }
+    }*/
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void showArrivedNotificationAPI26(String body) {

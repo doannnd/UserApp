@@ -97,6 +97,7 @@ import com.nguyendinhdoan.userapp.R;
 import com.nguyendinhdoan.userapp.common.Common;
 import com.nguyendinhdoan.userapp.model.Body;
 import com.nguyendinhdoan.userapp.model.Notification;
+import com.nguyendinhdoan.userapp.model.RateDriver;
 import com.nguyendinhdoan.userapp.model.Result;
 import com.nguyendinhdoan.userapp.model.Sender;
 import com.nguyendinhdoan.userapp.model.Token;
@@ -106,9 +107,12 @@ import com.nguyendinhdoan.userapp.services.MyFirebaseIdServices;
 import com.nguyendinhdoan.userapp.services.MyFirebaseMessaging;
 import com.nguyendinhdoan.userapp.utils.CommonUtils;
 import com.nguyendinhdoan.userapp.widget.PlaceDetailFragment;
+import com.stepstone.apprating.AppRatingDialog;
+import com.stepstone.apprating.listener.RatingDialogListener;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
 
+import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -125,7 +129,7 @@ import retrofit2.Response;
 
 public class UserActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback,
-        View.OnTouchListener, View.OnClickListener {
+        View.OnTouchListener, View.OnClickListener, RatingDialogListener {
 
     private static final String PICKUP_REQUEST_TABLE_NAME = "pickup_request";
     private static final String TAG = "USER_ACTIVITY";
@@ -149,6 +153,8 @@ public class UserActivity extends AppCompatActivity
     private static final String EMAIL_KEY = "email";
     private static final String PHONE_KEY = "phone";
     private static final String AVATAR_URL_KEY = "avatarUrl";
+    private static final String RATE_DRIVER_TABLE = "rate_driver";
+    private static final String DRIVER_TABLE = "drivers";
 
 
     private Toolbar toolbar;
@@ -196,6 +202,9 @@ public class UserActivity extends AppCompatActivity
 
     private String phoneNumberDriver;
 
+    private DatabaseReference driverTable;
+    private DatabaseReference rateDriverTable;
+
     private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -211,9 +220,37 @@ public class UserActivity extends AppCompatActivity
                 resultCallDriverTextView.setText(getString(R.string.driver_accept_request));
                 resultCallDriverTextView.setTextColor(Color.BLUE);
                 driverCallButton.setEnabled(false);
+            } else if (message.equals("DropOff")) {
+                showDialog();
             }
         }
     };
+
+    private void showDialog() {
+        new AppRatingDialog.Builder()
+                .setPositiveButtonText("Submit")
+                .setNegativeButtonText("Cancel")
+                .setNeutralButtonText("Later")
+                .setNoteDescriptions(Arrays.asList("Very Bad", "Not good", "Quite ok", "Very Good", "Excellent !!!"))
+                .setDefaultRating(3)
+                .setTitle("Rate for driver")
+                .setDescription("Please select some stars and give your feedback")
+                .setCommentInputEnabled(true)
+                .setDefaultComment("Comment here")
+                .setStarColor(R.color.starColor)
+                .setNoteDescriptionTextColor(R.color.noteDescriptionTextColor)
+                .setTitleTextColor(R.color.titleTextColor)
+                .setDescriptionTextColor(R.color.contentTextColor)
+                .setHint("Please write your comment here ...")
+                .setHintTextColor(R.color.hintTextColor)
+                .setCommentTextColor(R.color.commentTextColor)
+                .setCommentBackgroundColor(R.color.colorCommentBackground)
+                .setWindowAnimation(R.style.MyDialogFadeAnimation)
+                .setCancelable(false)
+                .setCanceledOnTouchOutside(false)
+                .create(UserActivity.this)
+                .show();
+    }
 
     public static Intent start(Context context) {
         return new Intent(context, UserActivity.class);
@@ -327,6 +364,9 @@ public class UserActivity extends AppCompatActivity
 
         // storage
         storageReference = FirebaseStorage.getInstance().getReference();
+
+        driverTable = FirebaseDatabase.getInstance().getReference(DRIVER_TABLE);
+        rateDriverTable = FirebaseDatabase.getInstance().getReference(RATE_DRIVER_TABLE);
     }
 
     private void setupLocation() {
@@ -1214,5 +1254,74 @@ public class UserActivity extends AppCompatActivity
                 );
 
         placeDetailFragment.show(getSupportFragmentManager(), placeDetailFragment.getTag());
+    }
+
+    @Override
+    public void onNegativeButtonClicked() {
+        Toast.makeText(this, "cancel", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onNeutralButtonClicked() {
+        Toast.makeText(this, "later", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onPositiveButtonClicked(int rates, @NonNull String comments) {
+        RateDriver rateDriver = new RateDriver(String.valueOf(rates), comments);
+
+        rateDriverTable.child(Common.driverId)
+                .push()
+                .setValue(rateDriver)
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+
+                            // if success , calculate average of rate and update to Driver information
+                            rateDriverTable.child(Common.driverId)
+                                    .addValueEventListener(new ValueEventListener() {
+                                        @Override
+                                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                            double sumStar = 0.0;
+                                            int count = 0;
+                                            for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
+                                                RateDriver rateDriver1 = postSnapshot.getValue(RateDriver.class);
+                                                sumStar += Double.parseDouble(rateDriver1.getRates());
+                                                count++;
+                                            }
+                                            double averageStar = sumStar / count;
+                                            DecimalFormat df = new DecimalFormat("#.#");
+                                            String valueUpdate = df.format(averageStar);
+
+
+                                            // create object update
+                                            Map<String, Object> driverUpdateRate = new HashMap<>();
+                                            driverUpdateRate.put("rates", valueUpdate);
+
+                                            driverTable.child(Common.driverId).updateChildren(driverUpdateRate)
+                                                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                        @Override
+                                                        public void onComplete(@NonNull Task<Void> task) {
+                                                            if (task.isSuccessful()) {
+                                                                showSnackBar("Thank you your submit");
+                                                            } else {
+                                                                showSnackBar("rate updated but can't write to driver table");
+                                                            }
+                                                        }
+                                                    });
+                                        }
+
+                                        @Override
+                                        public void onCancelled(@NonNull DatabaseError databaseError) {
+                                            Log.e(TAG, "onCancelled: error" + databaseError);
+                                        }
+                                    });
+
+                        } else {
+                            Toast.makeText(UserActivity.this, "error occur", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
     }
 }

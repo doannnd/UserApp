@@ -22,9 +22,6 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" />
 
-        <activity android:name=".activity.RateActivity"
-            android:screenOrientation="portrait"/>
-
         <activity
             android:name=".activity.SplashActivity"
             android:screenOrientation="portrait"
