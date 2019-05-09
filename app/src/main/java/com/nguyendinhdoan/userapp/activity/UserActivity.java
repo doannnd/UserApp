@@ -204,6 +204,7 @@ public class UserActivity extends AppCompatActivity
 
     private DatabaseReference driverTable;
     private DatabaseReference rateDriverTable;
+    private  GeoQuery findGeoQuery;
 
     private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
         @Override
@@ -223,7 +224,6 @@ public class UserActivity extends AppCompatActivity
             } else if (message.equals("DropOff")) {
                 showDialog();
                 resultCallDriverTextView.setText("");
-                pickupRequestButton.setEnabled(true);
             }
         }
     };
@@ -1151,7 +1151,7 @@ public class UserActivity extends AppCompatActivity
                         @Override
                         public void onComplete(String key, DatabaseError error) {
                             if (error == null) {
-                                pickupRequestButton.setText(getString(R.string.call_driver_button_text));
+                                //pickupRequestButton.setText(getString(R.string.call_driver_button_text));
 
                                /* if (userMarker != null) {
                                     userMarker.remove();
@@ -1177,7 +1177,7 @@ public class UserActivity extends AppCompatActivity
     }
 
     private void findDriver() {
-        final GeoQuery findGeoQuery = driverLocationGeoFire.queryAtLocation(
+        findGeoQuery = driverLocationGeoFire.queryAtLocation(
                 new GeoLocation(lastLocation.getLatitude(), lastLocation.getLongitude()), radiusFindDriver
         );
 
@@ -1291,8 +1291,10 @@ public class UserActivity extends AppCompatActivity
                                             int count = 0;
                                             for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
                                                 RateDriver rateDriver1 = postSnapshot.getValue(RateDriver.class);
-                                                sumStar += Double.parseDouble(rateDriver1.getRates());
-                                                count++;
+                                                if (rateDriver1 != null) {
+                                                    sumStar += Double.parseDouble(rateDriver1.getRates());
+                                                    count++;
+                                                }
                                             }
                                             double averageStar = sumStar / count;
                                             DecimalFormat df = new DecimalFormat("#.#");
@@ -1309,6 +1311,11 @@ public class UserActivity extends AppCompatActivity
                                                         public void onComplete(@NonNull Task<Void> task) {
                                                             if (task.isSuccessful()) {
                                                                 showSnackBar("Thank you your submit");
+                                                                // reset pickup request
+                                                                findGeoQuery.removeAllListeners();
+                                                                driverCallButton.setEnabled(true);
+                                                                Common.driverId = "";
+                                                                Common.isDriverFound = false;
                                                             } else {
                                                                 showSnackBar("rate updated but can't write to driver table");
                                                             }
