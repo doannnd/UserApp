@@ -15,6 +15,7 @@ public class Common {
 
     public static boolean isDriverFound = false;
     public static String driverId = "";
+    public static boolean isFind = false;
 
     private static final String API_KEY = "AIzaSyDXP3aehsojrBx1Nr0RPt85sLPpZLvmeAM";
     private static final String fcmFURL = "https://fcm.googleapis.com";
