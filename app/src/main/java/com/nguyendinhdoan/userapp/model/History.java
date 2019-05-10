@@ -8,6 +8,9 @@ public class History {
     private String distance;
     private String time;
 
+    public History() {
+    }
+
     public History(String date, String startAddress, String endAddress, String distance, String time) {
         this.date = date;
         this.startAddress = startAddress;

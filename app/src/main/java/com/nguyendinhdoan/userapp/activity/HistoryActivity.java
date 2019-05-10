@@ -41,7 +41,7 @@ public class HistoryActivity extends AppCompatActivity {
 
         initViews();
         setupData();
-        initRecyclerView();
+        //initRecyclerView();
     }
 
     private void setupData() {
@@ -57,6 +57,7 @@ public class HistoryActivity extends AppCompatActivity {
                             History history = dataSnapshot1.getValue(History.class);
                             historyList.add(history);
                         }
+                        initRecyclerView();
                     }
 
                     @Override

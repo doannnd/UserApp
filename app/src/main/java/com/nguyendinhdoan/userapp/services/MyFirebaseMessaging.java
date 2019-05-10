@@ -42,6 +42,11 @@ public class MyFirebaseMessaging extends FirebaseMessagingService {
                 });*/
 
                     sendMessageToUserActivity("cancel");
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        showArrivedNotificationAPI26(remoteMessage.getNotification().getBody());
+                    } else {
+                        showArrivedNotification(remoteMessage.getNotification().getBody());
+                    }
                     break;
                 case "accept":
                     sendMessageToUserActivity("accept");
@@ -56,6 +61,19 @@ public class MyFirebaseMessaging extends FirebaseMessagingService {
                 case "DropOff":
                     //openRateDriverActivity(remoteMessage.getNotification().getBody());
                     sendMessageToUserActivity("DropOff");
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        showArrivedNotificationAPI26(remoteMessage.getNotification().getBody());
+                    } else {
+                        showArrivedNotification(remoteMessage.getNotification().getBody());
+                    }
+                    break;
+                case "cancelTrip":
+                    sendMessageToUserActivity("cancelTrip");
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        showArrivedNotificationAPI26(remoteMessage.getNotification().getBody());
+                    } else {
+                        showArrivedNotification(remoteMessage.getNotification().getBody());
+                    }
                     break;
             }
         }

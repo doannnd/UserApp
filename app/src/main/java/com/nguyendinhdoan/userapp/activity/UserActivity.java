@@ -21,6 +21,7 @@ import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputEditText;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.GravityCompat;
@@ -106,6 +107,7 @@ import com.nguyendinhdoan.userapp.remote.IFirebaseMessagingAPI;
 import com.nguyendinhdoan.userapp.services.MyFirebaseIdServices;
 import com.nguyendinhdoan.userapp.services.MyFirebaseMessaging;
 import com.nguyendinhdoan.userapp.utils.CommonUtils;
+import com.nguyendinhdoan.userapp.widget.CancelDialogFragment;
 import com.nguyendinhdoan.userapp.widget.PlaceDetailFragment;
 import com.stepstone.apprating.AppRatingDialog;
 import com.stepstone.apprating.listener.RatingDialogListener;
@@ -225,9 +227,21 @@ public class UserActivity extends AppCompatActivity
             } else if (message.equals("DropOff")) {
                 showDialog();
                 resultCallDriverTextView.setText("");
+            } else if (message.equals("cancelTrip")) {
+                Common.driverId = "";
+                Common.isDriverFound = false;
+                pickupRequestButton.setText(getString(R.string.pickup_request_button_text));
+                resultCallDriverTextView.setText("");
+                showAlertDialog();
             }
         }
     };
+
+    private void showAlertDialog() {
+        FragmentManager fm = getSupportFragmentManager();
+        CancelDialogFragment alertDialog = CancelDialogFragment.newInstance("Cancel Trip", "The driver has canceled the trip for some reason, please find another driver");
+        alertDialog.show(fm, "fragment_alert");
+    }
 
     private void showDialog() {
         new AppRatingDialog.Builder()
