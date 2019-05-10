@@ -91,5 +91,6 @@
     <string name="call_driver">call driver</string>
     <string name="driver_decline_request">DRIVER DECLINE</string>
     <string name="driver_accept_request">DRIVER ACCEPT</string>
+    <string name="my_routes">My Routes</string>
 
 </resources>

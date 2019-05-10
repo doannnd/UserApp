@@ -155,6 +155,7 @@ public class UserActivity extends AppCompatActivity
     private static final String AVATAR_URL_KEY = "avatarUrl";
     private static final String RATE_DRIVER_TABLE = "rate_driver";
     private static final String DRIVER_TABLE = "drivers";
+    public static final String USER_ID_KEY = "USER_ID_KEY";
 
 
     private Toolbar toolbar;
@@ -466,6 +467,7 @@ public class UserActivity extends AppCompatActivity
 
         switch (item.getItemId()) {
             case R.id.nav_trip_history: {
+                launchHistoryActivity();
                 break;
             }
             case R.id.nav_edit_profile: {
@@ -480,6 +482,19 @@ public class UserActivity extends AppCompatActivity
 
         drawerLayout.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void launchHistoryActivity() {
+        FirebaseUser driver = FirebaseAuth.getInstance().getCurrentUser();
+        if (driver != null) {
+            String userId = driver.getUid();
+            Intent intentHistory = HistoryActivity.start(this);
+            intentHistory.putExtra(USER_ID_KEY, userId);
+
+            intentHistory.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intentHistory);
+            //finish();
+        }
     }
 
     private void showDialogUpdateProfile() {
