@@ -1,6 +1,7 @@
 package com.nguyendinhdoan.userapp.activity;
 
 import android.Manifest;
+import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
@@ -13,11 +14,11 @@ import android.graphics.Color;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.BottomSheetBehavior;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputEditText;
@@ -34,6 +35,7 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.LinearInterpolator;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -58,10 +60,14 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.JointType;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.maps.model.SquareCap;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
@@ -85,6 +91,7 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.google.gson.Gson;
+import com.google.maps.android.PolyUtil;
 import com.google.maps.android.SphericalUtil;
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.MultiplePermissionsReport;
@@ -105,6 +112,7 @@ import com.nguyendinhdoan.userapp.model.Sender;
 import com.nguyendinhdoan.userapp.model.Token;
 import com.nguyendinhdoan.userapp.model.User;
 import com.nguyendinhdoan.userapp.remote.IFirebaseMessagingAPI;
+import com.nguyendinhdoan.userapp.remote.IGoogleAPI;
 import com.nguyendinhdoan.userapp.services.MyFirebaseIdServices;
 import com.nguyendinhdoan.userapp.services.MyFirebaseMessaging;
 import com.nguyendinhdoan.userapp.utils.CommonUtils;
@@ -115,6 +123,10 @@ import com.stepstone.apprating.listener.RatingDialogListener;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -122,8 +134,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.UUID;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -162,14 +172,19 @@ public class UserActivity extends AppCompatActivity
     private static final String DRIVER_TABLE = "drivers";
     public static final String USER_ID_KEY = "USER_ID_KEY";
 
+    public static final String DIRECTION_ROUTES_KEY = "routes";
+    public static final String DIRECTION_POLYLINE_KEY = "overview_polyline";
+    public static final String DIRECTION_POINT_KEY = "points";
+    public static final int DIRECTION_PADDING = 150;
+    private static final float POLYLINE_WIDTH = 5F;
+    private static final long DIRECTION_ANIMATE_DURATION = 3000L;
 
     private Toolbar toolbar;
     private DrawerLayout drawerLayout;
     private NavigationView navigationView;
     private EditText destinationEditText;
     private ProgressBar userProgressBar;
-    private ImageView upImageView;
-    private Button pickupRequestButton;
+    private FloatingActionButton pickupRequestButton;
 
     private GoogleMap userGoogleMap;
     private FusedLocationProviderClient fusedLocationProviderClient;
@@ -212,6 +227,12 @@ public class UserActivity extends AppCompatActivity
     private DatabaseReference rateDriverTable;
     private GeoQuery findGeoQuery;
 
+    private List<LatLng> directionPolylineList;
+    private Polyline grayPolyline;
+    private Polyline blackPolyline;
+    private ValueAnimator polyLineAnimator;
+    private IGoogleAPI mServiesGoogle;
+
     private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -221,28 +242,28 @@ public class UserActivity extends AppCompatActivity
                     //final String driverId = intent.getStringExtra(MyFirebaseMessaging.BODY_KEY);
                     Common.driverId = "";
                     Common.isDriverFound = false;
-                    pickupRequestButton.setText(getString(R.string.pickup_request_button_text));
-                    resultCallDriverTextView.setText(getString(R.string.driver_decline_request));
-                    resultCallDriverTextView.setTextColor(Color.RED);
+                    //pickupRequestButton.setText(getString(R.string.pickup_request_button_text));
+                   /* resultCallDriverTextView.setText(getString(R.string.driver_decline_request));
+                    resultCallDriverTextView.setTextColor(Color.RED);*/
                     break;
                 }
                 case "accept":
-                    pickupRequestButton.setText(getString(R.string.pickup_request_button_text));
-                    resultCallDriverTextView.setText(getString(R.string.driver_accept_request));
+                    //pickupRequestButton.setText(getString(R.string.pickup_request_button_text));
+                    /*resultCallDriverTextView.setText(getString(R.string.driver_accept_request));
                     resultCallDriverTextView.setTextColor(Color.BLUE);
-                    driverCallButton.setEnabled(false);
+                    driverCallButton.setEnabled(false);*/
                     break;
                 case "DropOff":
                     showDialog();
-                    resultCallDriverTextView.setText("");
+                    //resultCallDriverTextView.setText("");
                     break;
                 case "cancelTrip": {
                     //final String driverId = intent.getStringExtra(MyFirebaseMessaging.BODY_KEY);
                     Common.driverId = "";
                     Common.isDriverFound = false;
-                    pickupRequestButton.setText(getString(R.string.pickup_request_button_text));
-                    resultCallDriverTextView.setText("");
-                    driverCallButton.setEnabled(true);
+                    //pickupRequestButton.setText(getString(R.string.pickup_request_button_text));
+                  /*  resultCallDriverTextView.setText("");
+                    driverCallButton.setEnabled(true);*/
                     showAlertDialog();
                     break;
                 }
@@ -312,10 +333,9 @@ public class UserActivity extends AppCompatActivity
         Log.d(TAG, "addEvents: started.");
         navigationView.setNavigationItemSelectedListener(this);
         destinationEditText.setOnTouchListener(this);
-        upImageView.setOnClickListener(this);
-        pickupRequestButton.setOnClickListener(this);
+        /*pickupRequestButton.setOnClickListener(this);
         driverPhoneTextView.setOnClickListener(this);
-        driverCallButton.setOnClickListener(this);
+        driverCallButton.setOnClickListener(this);*/
     }
 
     private void initViews() {
@@ -325,16 +345,15 @@ public class UserActivity extends AppCompatActivity
         navigationView = findViewById(R.id.nav_view);
         destinationEditText = findViewById(R.id.destination_edit_text);
         userProgressBar = findViewById(R.id.user_progress_bar);
-        upImageView = findViewById(R.id.up_image_view);
         pickupRequestButton = findViewById(R.id.pickup_request_button);
 
-        View view = findViewById(R.id.call_driver_bottom_sheet);
+     /*   View view = findViewById(R.id.call_driver_bottom_sheet);
         callDriverBehavior = BottomSheetBehavior.from(view);
         driverNameTextView = view.findViewById(R.id.driver_name_text_view);
         driverStarTextView = view.findViewById(R.id.driver_star_text_view);
         driverPhoneTextView = view.findViewById(R.id.driver_phone_text_view);
         driverCallButton = view.findViewById(R.id.driver_call_button);
-        resultCallDriverTextView = view.findViewById(R.id.result_call_driver_text_view);
+        resultCallDriverTextView = view.findViewById(R.id.result_call_driver_text_view);*/
     }
 
     private void setupUI() {
@@ -381,6 +400,7 @@ public class UserActivity extends AppCompatActivity
 
     private void initServices() {
         mServices = Common.getFirebaseMessagingAPI();
+        mServiesGoogle = Common.getGoogleAPI();
     }
 
     private void setupFirebase() {
@@ -422,7 +442,7 @@ public class UserActivity extends AppCompatActivity
         RelativeLayout.LayoutParams rlp = (RelativeLayout.LayoutParams) locationButton.getLayoutParams();
         rlp.addRule(RelativeLayout.ALIGN_PARENT_TOP, 0);
         rlp.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
-        rlp.setMargins(0, 0, 30, 30);
+        rlp.setMargins(0, 0, 50, 50);
     }
 
     private void setupNavigationView() {
@@ -718,14 +738,14 @@ public class UserActivity extends AppCompatActivity
                 Log.d(TAG, "origin place name: " + place.getName());
                 // set address for destination edit text
                 destinationEditText.setText(destination);
-
+                handleDriverDirection(destinationLocation);
                 // add marker destination on google map
                 //userGoogleMap.clear();
 
                 // display default marker at destination location
-                displayDestinationMarker(destination, destinationLocation);
+                //displayDestinationMarker(destination, destinationLocation);
                 // display place detail
-                displayPlaceDetail();
+                //displayPlaceDetail();
 
             } else if (resultCode == AutocompleteActivity.RESULT_ERROR) {
                 Status status = Autocomplete.getStatusFromIntent(Objects.requireNonNull(data));
@@ -763,6 +783,148 @@ public class UserActivity extends AppCompatActivity
                 Log.e(TAG, "onActivityResult: error upload image with crop" + error);
             }
         }
+    }
+
+    private void handleDriverDirection(LatLng destinationLocation) {
+
+        //driverProgressBar.setVisibility(View.VISIBLE);
+
+        if (directionPolylineList != null) {
+            userGoogleMap.clear();
+
+            // add new marker
+            // draw marker on google map
+           /* driverMarker = userGoogleMap.addMarker(new MarkerOptions()
+                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_car))
+                    .position(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()))
+                    .title(getString(R.string.title_of_you))
+            );
+            // show title marker
+            driverMarker.showInfoWindow();*/
+        }
+
+        if (polyLineAnimator != null) {
+            polyLineAnimator.cancel();
+        }
+
+        // save current position
+        /*double currentLatitude = lastLocation.getLatitude();
+        double currentLongitude = lastLocation.getLongitude();
+        LatLng currentPosition = new LatLng(currentLatitude, currentLongitude);*/
+
+        try {
+            //building direction url for driver
+            String directionURL = Common.directionURL(String.format(Locale.getDefault(), "%f,%f", lastLocation.getLatitude(), lastLocation.getLongitude()),
+                    String.format(Locale.getDefault(), "%f,%f", destinationLocation.latitude, destinationLocation.longitude));
+            Log.d(TAG, "direction url: " + directionURL);
+
+            // show direction
+            mServiesGoogle.getDirectionPath(directionURL)
+                    .enqueue(new Callback<String>() {
+                        @Override
+                        public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
+                            handleDirectionJSON(response.body());
+                        }
+
+                        @Override
+                        public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
+                            Log.e(TAG, "error in show direction of driver: " + t.getMessage());
+                            showSnackBar(t.getMessage());
+                        }
+                    });
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void handleDirectionJSON(String directionJSON) {
+        try {
+            JSONObject root = new JSONObject(directionJSON);
+            JSONArray routes = root.getJSONArray(DIRECTION_ROUTES_KEY);
+
+            // handle and decode direction json ==> string
+            for (int i = 0; i < routes.length(); i++) {
+                JSONObject route = routes.getJSONObject(i);
+                JSONObject overviewPolyline = route.getJSONObject(DIRECTION_POLYLINE_KEY);
+                String points = overviewPolyline.getString(DIRECTION_POINT_KEY);
+                directionPolylineList = PolyUtil.decode(points);
+            }
+            Log.d(TAG, "direction polyline list size: " + directionPolylineList.size());
+
+            // show direction polyline on google map
+            showDirectionOnMap(directionPolylineList);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void showDirectionOnMap(List<LatLng> directionPolylineList) {
+        // adjusting bound
+        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+        for (LatLng latLng : directionPolylineList) {
+            builder.include(latLng);
+        }
+
+        // handle display camera
+        LatLngBounds bounds = builder.build();
+        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngBounds(bounds, DIRECTION_PADDING);
+        userGoogleMap.moveCamera(cameraUpdate);
+
+        // handle information display of direction gray polyline
+        PolylineOptions grayPolylineOptions = new PolylineOptions();
+        grayPolylineOptions.color(Color.GRAY);
+        grayPolylineOptions.width(POLYLINE_WIDTH);
+        grayPolylineOptions.startCap(new SquareCap());
+        grayPolylineOptions.endCap(new SquareCap());
+        grayPolylineOptions.jointType(JointType.ROUND);
+        grayPolylineOptions.addAll(directionPolylineList);
+
+        // display black polyline overlay gray polyline on google map
+        grayPolyline = userGoogleMap.addPolyline(grayPolylineOptions);
+
+        PolylineOptions blackPolylineOptions = new PolylineOptions();
+        blackPolylineOptions.color(Color.BLACK);
+        blackPolylineOptions.width(POLYLINE_WIDTH);
+        blackPolylineOptions.startCap(new SquareCap());
+        blackPolylineOptions.endCap(new SquareCap());
+        blackPolylineOptions.jointType(JointType.ROUND);
+
+        // display black polyline on map
+        blackPolyline = userGoogleMap.addPolyline(blackPolylineOptions);
+
+        // display default marker at destination position
+        int destinationPosition = directionPolylineList.size() - 1;
+        Marker destinationMarker = userGoogleMap.addMarker(new MarkerOptions()
+                .position(directionPolylineList.get(destinationPosition))
+                .title(destinationEditText.getText().toString())
+        );
+        // show destination marker title
+        destinationMarker.showInfoWindow();
+
+        animateDirectionPolyline();
+    }
+
+    private void animateDirectionPolyline() {
+        // animation polyline
+        polyLineAnimator = ValueAnimator.ofInt(0, 100);
+        polyLineAnimator.setDuration(DIRECTION_ANIMATE_DURATION);
+        polyLineAnimator.setInterpolator(new LinearInterpolator());
+        polyLineAnimator.setRepeatCount(ValueAnimator.INFINITE);
+        polyLineAnimator.setRepeatMode(ValueAnimator.RESTART);
+        polyLineAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                List<LatLng> points = grayPolyline.getPoints();
+                int percentValue = (int) valueAnimator.getAnimatedValue();
+                int size = points.size();
+                int newPoints = (int) (size * (percentValue / 100.0f));
+                List<LatLng> p = points.subList(0, newPoints);
+                blackPolyline.setPoints(p);
+            }
+        });
+        polyLineAnimator.start();
     }
 
     private void updateUIAndServer(final Uri resultUri) {
@@ -935,6 +1097,27 @@ public class UserActivity extends AppCompatActivity
 
         // load all available driver
         loadAllAvailableDriver();
+
+        // check current location change
+        if (directionPolylineList != null) {
+            userGoogleMap.clear();
+
+            /*// add new marker
+            // draw marker on google map
+            driverMarker = driverMap.addMarker(new MarkerOptions()
+                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_car))
+                    .position(new LatLng(Common.currentLocation.getLatitude(), Common.currentLocation.getLongitude()))
+                    .title(getString(R.string.title_of_you))
+            );
+            // show title marker
+            driverMarker.showInfoWindow();*/
+            // draw
+            handleDriverDirection(destinationLocation);
+        }
+
+        if (polyLineAnimator != null) {
+            polyLineAnimator.cancel();
+        }
     }
 
     private void loadAllAvailableDriver() {
@@ -1054,18 +1237,29 @@ public class UserActivity extends AppCompatActivity
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.pickup_request_button: {
-                if (!Common.isDriverFound) {
-                    requestPickupHere();
-                    resultCallDriverTextView.setText("");
-                } /*else {
+
+        if (v.getId() == R.id.pickup_request_button) {
+            if (destination != null) {
+                displayAllDriverDetail(destination, destinationLocation);
+            }
+        }
+
+       // switch (v.getId()) {
+            //case R.id.pickup_request_button: {
+             /* *//*  if (!Common.isDriverFound) {*//*
+                   // requestPickupHere();
+                    //resultCallDriverTextView.setText("");
+                } *//*else {
                 // user call driver request a car, user app send current location of user --> driver app
                 sendRequestToDiver(Common.driverId);
             }*/
-                break;
+                //break;
             }
-            case R.id.up_image_view: {
+
+    private void displayAllDriverDetail(String destination, LatLng destinationLocation) {
+        
+    }
+            /*case R.id.up_image_view: {
                 if (destination != null) {
                     displayPlaceDetail();
                 }
@@ -1081,10 +1275,10 @@ public class UserActivity extends AppCompatActivity
                     sendRequestToDiver(Common.driverId);
                 }
                 break;
-            }
-        }
+            }*/
+      /*  }
 
-    }
+    }*/
 
     private void callPhoneToDriver(final String phoneNumberDriver) {
         Dexter.withActivity(this)
@@ -1183,7 +1377,7 @@ public class UserActivity extends AppCompatActivity
                 });
     }
 
-    private void requestPickupHere() {
+    /*private void requestPickupHere() {
         FirebaseUser user = userAuth.getCurrentUser();
         if (user != null && lastLocation != null) {
             String userId = user.getUid();
@@ -1195,7 +1389,7 @@ public class UserActivity extends AppCompatActivity
                             if (error == null) {
                                 //pickupRequestButton.setText(getString(R.string.call_driver_button_text));
 
-                               /* if (userMarker != null) {
+                               *//* if (userMarker != null) {
                                     userMarker.remove();
                                 }
 
@@ -1205,7 +1399,7 @@ public class UserActivity extends AppCompatActivity
                                         .position(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()))
                                 );
                                 // always show ...
-                                userMarker.showInfoWindow();*/
+                                userMarker.showInfoWindow();*//*
 
                                 // find Driver when pickup request
                                 findDriver();
@@ -1217,8 +1411,8 @@ public class UserActivity extends AppCompatActivity
                     });
         }
     }
-
-    private void findDriver() {
+*/
+   /* private void findDriver() {
         findGeoQuery = driverLocationGeoFire.queryAtLocation(
                 new GeoLocation(lastLocation.getLatitude(), lastLocation.getLongitude()), radiusFindDriver
         );
@@ -1293,9 +1487,9 @@ public class UserActivity extends AppCompatActivity
             }
         });
 
-    }
+    }*/
 
-    private void displayPlaceDetail() {
+    /*private void displayPlaceDetail() {
         // convert location, latng --> string
         PlaceDetailFragment placeDetailFragment =
                 PlaceDetailFragment.newInstance(
@@ -1304,7 +1498,7 @@ public class UserActivity extends AppCompatActivity
                 );
 
         placeDetailFragment.show(getSupportFragmentManager(), placeDetailFragment.getTag());
-    }
+    }*/
 
     @Override
     public void onNegativeButtonClicked() {
