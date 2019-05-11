@@ -11,6 +11,7 @@ public class Driver implements Parcelable{
     private String avatarUrl;
     private String rates;
     private String state;
+    private String cancel;
 
     public Driver(String name, String email, String phone) {
         this.name = name;
@@ -31,6 +32,14 @@ public class Driver implements Parcelable{
 
     public void setState(String state) {
         this.state = state;
+    }
+
+    public String getCancel() {
+        return cancel;
+    }
+
+    public void setCancel(String cancel) {
+        this.cancel = cancel;
     }
 
     public void setRates(String rates) {

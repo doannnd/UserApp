@@ -23,6 +23,7 @@ public class MyFirebaseMessaging extends FirebaseMessagingService {
 
     public static final String MESSAGE_KEY = "MESSAGE_KEY";
     public static final String MESSAGE_DRIVER_KEY = "MESSAGE_DRIVER_KEY";
+    public static final String BODY_KEY = "BODY_KEY";
 
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
@@ -41,7 +42,7 @@ public class MyFirebaseMessaging extends FirebaseMessagingService {
                     }
                 });*/
 
-                    sendMessageToUserActivity("cancel");
+                    sendMessageCancelToUserActivity("cancel", remoteMessage.getNotification().getBody());
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         showArrivedNotificationAPI26(remoteMessage.getNotification().getBody());
                     } else {
@@ -68,16 +69,24 @@ public class MyFirebaseMessaging extends FirebaseMessagingService {
                     }
                     break;
                 case "cancelTrip":
-                    sendMessageToUserActivity("cancelTrip");
+                    String message1 = "The driver has canceled the trip for some reason, please find another driver";
+                    sendMessageCancelToUserActivity("cancelTrip", remoteMessage.getNotification().getBody());
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        showArrivedNotificationAPI26(remoteMessage.getNotification().getBody());
+                        showArrivedNotificationAPI26(message1);
                     } else {
-                        showArrivedNotification(remoteMessage.getNotification().getBody());
+                        showArrivedNotification(message1);
                     }
                     break;
             }
         }
 
+    }
+
+    private void sendMessageCancelToUserActivity(String message, String body) {
+        Intent intent = new Intent(MESSAGE_DRIVER_KEY);
+        intent.putExtra(MESSAGE_KEY, message);
+        intent.putExtra(BODY_KEY, body);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
     private void sendMessageToUserActivity(String message) {

@@ -13,6 +13,7 @@ import android.graphics.Color;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -121,6 +122,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.UUID;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -213,27 +216,36 @@ public class UserActivity extends AppCompatActivity
         @Override
         public void onReceive(Context context, Intent intent) {
             String message = intent.getStringExtra(MyFirebaseMessaging.MESSAGE_KEY);
-            if (message.equals("cancel")) {
-                Common.driverId = "";
-                Common.isDriverFound = false;
-                pickupRequestButton.setText(getString(R.string.pickup_request_button_text));
-                resultCallDriverTextView.setText(getString(R.string.driver_decline_request));
-                resultCallDriverTextView.setTextColor(Color.RED);
-            } else if (message.equals("accept")) {
-                pickupRequestButton.setText(getString(R.string.pickup_request_button_text));
-                resultCallDriverTextView.setText(getString(R.string.driver_accept_request));
-                resultCallDriverTextView.setTextColor(Color.BLUE);
-                driverCallButton.setEnabled(false);
-            } else if (message.equals("DropOff")) {
-                showDialog();
-                resultCallDriverTextView.setText("");
-            } else if (message.equals("cancelTrip")) {
-                Common.driverId = "";
-                Common.isDriverFound = false;
-                pickupRequestButton.setText(getString(R.string.pickup_request_button_text));
-                resultCallDriverTextView.setText("");
-                driverCallButton.setEnabled(true);
-                showAlertDialog();
+            switch (message) {
+                case "cancel": {
+                    //final String driverId = intent.getStringExtra(MyFirebaseMessaging.BODY_KEY);
+                    Common.driverId = "";
+                    Common.isDriverFound = false;
+                    pickupRequestButton.setText(getString(R.string.pickup_request_button_text));
+                    resultCallDriverTextView.setText(getString(R.string.driver_decline_request));
+                    resultCallDriverTextView.setTextColor(Color.RED);
+                    break;
+                }
+                case "accept":
+                    pickupRequestButton.setText(getString(R.string.pickup_request_button_text));
+                    resultCallDriverTextView.setText(getString(R.string.driver_accept_request));
+                    resultCallDriverTextView.setTextColor(Color.BLUE);
+                    driverCallButton.setEnabled(false);
+                    break;
+                case "DropOff":
+                    showDialog();
+                    resultCallDriverTextView.setText("");
+                    break;
+                case "cancelTrip": {
+                    //final String driverId = intent.getStringExtra(MyFirebaseMessaging.BODY_KEY);
+                    Common.driverId = "";
+                    Common.isDriverFound = false;
+                    pickupRequestButton.setText(getString(R.string.pickup_request_button_text));
+                    resultCallDriverTextView.setText("");
+                    driverCallButton.setEnabled(true);
+                    showAlertDialog();
+                    break;
+                }
             }
         }
     };
@@ -1224,7 +1236,7 @@ public class UserActivity extends AppCompatActivity
                         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                             Driver driverPickupRequest = dataSnapshot.getValue(Driver.class);
                             Log.d(TAG, "sate: " + driverPickupRequest.getState());
-                            if (driverPickupRequest.getState().equals("not_working")) {
+                            if (driverPickupRequest.getState().equals("not_working") && driverPickupRequest.getCancel().equals("0")) {
                                 Common.isDriverFound = true;
                                 Common.driverId = key;
                                 Toast.makeText(UserActivity.this, "" + key, Toast.LENGTH_SHORT).show();
