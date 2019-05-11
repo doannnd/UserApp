@@ -214,7 +214,7 @@ public class UserActivity extends AppCompatActivity
     private StorageReference storageReference;
     private AlertDialog loading;
 
-    private BottomSheetBehavior callDriverBehavior;
+    private BottomSheetBehavior driverBottomSheetBehavior;
     private TextView driverNameTextView;
     private TextView driverStarTextView;
     private TextView driverPhoneTextView;
@@ -333,8 +333,8 @@ public class UserActivity extends AppCompatActivity
         Log.d(TAG, "addEvents: started.");
         navigationView.setNavigationItemSelectedListener(this);
         destinationEditText.setOnTouchListener(this);
-        /*pickupRequestButton.setOnClickListener(this);
-        driverPhoneTextView.setOnClickListener(this);
+        pickupRequestButton.setOnClickListener(this);
+        /*driverPhoneTextView.setOnClickListener(this);
         driverCallButton.setOnClickListener(this);*/
     }
 
@@ -442,7 +442,7 @@ public class UserActivity extends AppCompatActivity
         RelativeLayout.LayoutParams rlp = (RelativeLayout.LayoutParams) locationButton.getLayoutParams();
         rlp.addRule(RelativeLayout.ALIGN_PARENT_TOP, 0);
         rlp.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
-        rlp.setMargins(0, 0, 50, 50);
+        rlp.setMargins(0, 0, 30, 150);
     }
 
     private void setupNavigationView() {
@@ -674,10 +674,7 @@ public class UserActivity extends AppCompatActivity
     }
 
     private void setupMap() {
-        userGoogleMap.setIndoorEnabled(false);
-        userGoogleMap.setBuildingsEnabled(false);
-        userGoogleMap.setTrafficEnabled(false);
-        userGoogleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+       userGoogleMap.getUiSettings().setZoomControlsEnabled(true);
     }
 
     @Override
@@ -1257,7 +1254,10 @@ public class UserActivity extends AppCompatActivity
             }
 
     private void displayAllDriverDetail(String destination, LatLng destinationLocation) {
-        
+        Toast.makeText(this, "ok", Toast.LENGTH_SHORT).show();
+        View view = findViewById(R.id.driver_bottom_sheet);
+        driverBottomSheetBehavior = BottomSheetBehavior.from(view);
+        driverBottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
     }
             /*case R.id.up_image_view: {
                 if (destination != null) {
@@ -1352,7 +1352,7 @@ public class UserActivity extends AppCompatActivity
                                                                    @NonNull Response<Result> response) {
                                                 if (response.isSuccessful()) {
                                                     showSnackBar(getString(R.string.send_message_to_driver_success));
-                                                    callDriverBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                                                    //callDriverBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
                                                 } else {
                                                     showSnackBar(getString(R.string.send_message_to_driver_error));
                                                 }
