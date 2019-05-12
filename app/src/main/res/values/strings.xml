@@ -101,5 +101,6 @@
     <string name="icon_green">icon green</string>
     <string name="icon_blue">icon blue</string>
     <string name="cancel_button_text">Cancel</string>
+    <string name="please_enter_destination_address">Please enter destination address</string>
 
 </resources>

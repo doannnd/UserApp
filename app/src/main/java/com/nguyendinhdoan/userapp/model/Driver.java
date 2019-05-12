@@ -5,6 +5,7 @@ import android.os.Parcelable;
 
 public class Driver implements Parcelable{
 
+    private String id;
     private String name;
     private String email;
     private String phone;
@@ -17,6 +18,14 @@ public class Driver implements Parcelable{
     private String threeToTen;
     private String elevenToTwenty;
     private String biggerTwenty;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
 
     public String getLicensePlates() {
         return licensePlates;

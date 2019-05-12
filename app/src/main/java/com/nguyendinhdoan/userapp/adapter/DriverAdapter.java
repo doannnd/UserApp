@@ -1,7 +1,9 @@
 package com.nguyendinhdoan.userapp.adapter;
 
 import android.content.Context;
+import android.content.Intent;
 import android.support.annotation.NonNull;
+import android.support.constraint.ConstraintLayout;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,20 +13,32 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.nguyendinhdoan.userapp.R;
+import com.nguyendinhdoan.userapp.activity.CallActivity;
 import com.nguyendinhdoan.userapp.model.Driver;
 
 import java.util.List;
 
 public class DriverAdapter extends RecyclerView.Adapter<DriverAdapter.ViewHolder> {
 
+    public static final String CALL_DRIVER_KEY = "CALL_DRIVER_KEY";
+    public static final String LOCATION_ADDRESS_KEY = "LOCATION_ADDRESS_KEY";
+    public static final String DESTINATION_ADDRESS_KEY = "DESTINATION_ADDRESS_KEY";
+    public static final String PRICE_KEY = "PRICE_KEY";
+
     private Context context;
     private List<Driver> driverList;
     private String distance;
+    private String locationAddress;
+    private String destinationAddress;
+    private int priceFormat;
 
-    public DriverAdapter(Context context, List<Driver> driverList, String distance) {
+    public DriverAdapter(Context context, List<Driver> driverList, String distance,
+                         String locationAddress, String destinationAddress) {
         this.context = context;
         this.driverList = driverList;
         this.distance = distance;
+        this.locationAddress = locationAddress;
+        this.destinationAddress = destinationAddress;
     }
 
     @NonNull
@@ -36,7 +50,7 @@ public class DriverAdapter extends RecyclerView.Adapter<DriverAdapter.ViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull DriverAdapter.ViewHolder viewHolder, int position) {
-        Driver driver = driverList.get(position);
+        final Driver driver = driverList.get(position);
 
         // load avatar
         Glide.with(context).load(driver.getAvatarUrl())
@@ -48,6 +62,19 @@ public class DriverAdapter extends RecyclerView.Adapter<DriverAdapter.ViewHolder
         viewHolder.starTextView.setText(driver.getRates());
         // load trip price
         calculateTripFee(viewHolder, driver);
+
+        viewHolder.rootItem.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intentCall = new Intent(context, CallActivity.class);
+                intentCall.putExtra(CALL_DRIVER_KEY, driver);
+                intentCall.putExtra(LOCATION_ADDRESS_KEY, locationAddress);
+                intentCall.putExtra(DESTINATION_ADDRESS_KEY, destinationAddress);
+                intentCall.putExtra(PRICE_KEY, priceFormat);
+                context.startActivity(intentCall);
+            }
+        });
+
     }
 
     private void calculateTripFee(ViewHolder viewHolder, Driver driver) {
@@ -57,23 +84,30 @@ public class DriverAdapter extends RecyclerView.Adapter<DriverAdapter.ViewHolder
 
         switch (unitDistance) {
             case "m": {
-                viewHolder.priceTextView.setText(context.getString(R.string.price_text, driver.getZeroToTwo()));
+                double price = Double.parseDouble(driver.getZeroToTwo());
+                 priceFormat = (int) (price / 1000);
+                viewHolder.priceTextView.setText(context.getString(R.string.price_text, String.valueOf(priceFormat)));
+
                 break;
             }
             case "km": {
                 double valueDistanceFormat = Double.parseDouble(valueDistance);
                 if (valueDistanceFormat <= 2) {
                     double price = valueDistanceFormat * Double.parseDouble(driver.getZeroToTwo());
-                    viewHolder.priceTextView.setText(context.getString(R.string.price_text, String.valueOf(price)));
+                    priceFormat = (int) (price / 1000);
+                    viewHolder.priceTextView.setText(context.getString(R.string.price_text, String.valueOf(priceFormat)));
                 } else if (valueDistanceFormat > 2 && valueDistanceFormat <= 10) {
                     double price = valueDistanceFormat * Double.parseDouble(driver.getThreeToTen());
-                    viewHolder.priceTextView.setText(context.getString(R.string.price_text, String.valueOf(price)));
+                    priceFormat = (int) (price / 1000);
+                    viewHolder.priceTextView.setText(context.getString(R.string.price_text, String.valueOf(priceFormat)));
                 } else if (valueDistanceFormat > 10 && valueDistanceFormat <= 20) {
                     double price = valueDistanceFormat * Double.parseDouble(driver.getElevenToTwenty());
-                    viewHolder.priceTextView.setText(context.getString(R.string.price_text, String.valueOf(price)));
+                    priceFormat = (int) (price / 1000);
+                    viewHolder.priceTextView.setText(context.getString(R.string.price_text, String.valueOf(priceFormat)));
                 } else if (valueDistanceFormat > 20) {
                     double price = valueDistanceFormat * Double.parseDouble(driver.getBiggerTwenty());
-                    viewHolder.priceTextView.setText(context.getString(R.string.price_text, String.valueOf(price)));
+                    priceFormat = (int) (price / 1000);
+                    viewHolder.priceTextView.setText(context.getString(R.string.price_text, String.valueOf(priceFormat)));
                 }
                 break;
             }
@@ -83,22 +117,18 @@ public class DriverAdapter extends RecyclerView.Adapter<DriverAdapter.ViewHolder
 
     @Override
     public int getItemCount() {
-        return 0;
+        return driverList.size();
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+
+    public class ViewHolder extends RecyclerView.ViewHolder {
 
         private ImageView avatarImageView;
         private TextView nameTextView;
         private TextView vehicleNameTextView;
         private TextView priceTextView;
         private TextView starTextView;
-
-        private OnItemClickListener onItemClickListener;
-
-        public void setOnItemClickListener(OnItemClickListener onItemClickListener) {
-            this.onItemClickListener = onItemClickListener;
-        }
+        private ConstraintLayout rootItem;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -108,17 +138,9 @@ public class DriverAdapter extends RecyclerView.Adapter<DriverAdapter.ViewHolder
             vehicleNameTextView = itemView.findViewById(R.id.vehicle_name_text_view);
             priceTextView = itemView.findViewById(R.id.price_text_view);
             starTextView = itemView.findViewById(R.id.star_text_view);
-
-            itemView.setOnClickListener(this);
+            rootItem = itemView.findViewById(R.id.root_item);
         }
 
-        @Override
-        public void onClick(View v) {
-            onItemClickListener.onItemClicked(getAdapterPosition());
-        }
     }
 
-    public interface OnItemClickListener {
-        void onItemClicked(int position);
-    }
 }
