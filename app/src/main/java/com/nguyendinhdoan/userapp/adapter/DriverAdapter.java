@@ -2,6 +2,7 @@ package com.nguyendinhdoan.userapp.adapter;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
 import android.support.v7.widget.RecyclerView;
@@ -12,6 +13,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.google.android.gms.maps.model.LatLng;
 import com.nguyendinhdoan.userapp.R;
 import com.nguyendinhdoan.userapp.activity.CallActivity;
 import com.nguyendinhdoan.userapp.model.Driver;
@@ -24,6 +26,8 @@ public class DriverAdapter extends RecyclerView.Adapter<DriverAdapter.ViewHolder
     public static final String LOCATION_ADDRESS_KEY = "LOCATION_ADDRESS_KEY";
     public static final String DESTINATION_ADDRESS_KEY = "DESTINATION_ADDRESS_KEY";
     public static final String PRICE_KEY = "PRICE_KEY";
+    public static final String DESTINATION_LOCATION_KEY = "DESTINATION_LOCATION_KEY";
+    public static final String DESTINATION_LOCATION_BUNDLE = "DESTINATION_LOCATION_BUNDLE";
 
     private Context context;
     private List<Driver> driverList;
@@ -31,14 +35,16 @@ public class DriverAdapter extends RecyclerView.Adapter<DriverAdapter.ViewHolder
     private String locationAddress;
     private String destinationAddress;
     private int priceFormat;
+    private LatLng destinationLocation;
 
     public DriverAdapter(Context context, List<Driver> driverList, String distance,
-                         String locationAddress, String destinationAddress) {
+                         String locationAddress, String destinationAddress, LatLng destinationLocation) {
         this.context = context;
         this.driverList = driverList;
         this.distance = distance;
         this.locationAddress = locationAddress;
         this.destinationAddress = destinationAddress;
+        this.destinationLocation = destinationLocation;
     }
 
     @NonNull
@@ -67,10 +73,14 @@ public class DriverAdapter extends RecyclerView.Adapter<DriverAdapter.ViewHolder
             @Override
             public void onClick(View v) {
                 Intent intentCall = new Intent(context, CallActivity.class);
+                Bundle bundle = new Bundle();
+                bundle.putParcelable(DESTINATION_LOCATION_KEY, destinationLocation);
+
                 intentCall.putExtra(CALL_DRIVER_KEY, driver);
                 intentCall.putExtra(LOCATION_ADDRESS_KEY, locationAddress);
                 intentCall.putExtra(DESTINATION_ADDRESS_KEY, destinationAddress);
                 intentCall.putExtra(PRICE_KEY, priceFormat);
+                intentCall.putExtra(DESTINATION_LOCATION_BUNDLE, bundle);
                 context.startActivity(intentCall);
             }
         });

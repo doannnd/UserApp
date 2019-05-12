@@ -1197,7 +1197,7 @@ public class UserActivity extends AppCompatActivity
                                 distanceTextView.setText(km);
 
                                 if (driverList != null) {
-                                    loadAllDriverToRecyclerView(driverList, km, locationAddress, destinationAddress);
+                                    loadAllDriverToRecyclerView(driverList, km, locationAddress, destinationAddress, destinationLocation);
                                 }
 
                             } catch (JSONException e) {
@@ -1216,11 +1216,11 @@ public class UserActivity extends AppCompatActivity
     }
 
     private void loadAllDriverToRecyclerView(List<Driver> driverList, String km,
-                                             String locationAddress, String destinationAddress) {
+                                             String locationAddress, String destinationAddress, LatLng destinationLocation) {
         driverRecyclerView.setHasFixedSize(true);
         driverRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        adapter = new DriverAdapter(this, driverList, km, locationAddress, destinationAddress);
+        adapter = new DriverAdapter(this, driverList, km, locationAddress, destinationAddress, destinationLocation);
         driverRecyclerView.setAdapter(adapter);
         adapter.notifyDataSetChanged();
     }

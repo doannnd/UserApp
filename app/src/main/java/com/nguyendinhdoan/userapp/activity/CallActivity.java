@@ -33,8 +33,10 @@ import com.karumi.dexter.listener.PermissionGrantedResponse;
 import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.single.PermissionListener;
 import com.nguyendinhdoan.userapp.R;
+import com.nguyendinhdoan.userapp.adapter.DriverAdapter;
 import com.nguyendinhdoan.userapp.common.Common;
 import com.nguyendinhdoan.userapp.model.Body;
+import com.nguyendinhdoan.userapp.model.Driver;
 import com.nguyendinhdoan.userapp.model.Notification;
 import com.nguyendinhdoan.userapp.model.Result;
 import com.nguyendinhdoan.userapp.model.Sender;
@@ -54,19 +56,16 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
     private Toolbar callToolbar;
     private AVLoadingIndicatorView loadingIndicator;
     private TextView pickUpAddressTextView;
-    private TextView droffOfAddressTextView;
+    private TextView dropOfAddressTextView;
     private TextView feeTextView;
     private TextView phoneTextView;
     private TextView licensePlatesTextView;
     private Button cancelButton;
     private LinearLayout driverDetail;
 
-    private String driverId;
-    private String destinationAdress;
+    private Driver driver;
+    private String destinationAddress;
     private LatLng destinationLocation;
-
-    private String phoneNumberDriver;
-    private String licensePlatesDriver;
 
     public static Intent start(Context context) {
         return new Intent(context, CallActivity.class);
@@ -79,7 +78,6 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
 
         initViews();
         setupUI();
-        sendRequestToDiver();
         addEvents();
     }
 
@@ -90,6 +88,27 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
 
     private void setupUI() {
         setupToolbar();
+        displayTripDetail();
+    }
+
+    private void displayTripDetail() {
+        if (getIntent() != null) {
+            driver = getIntent().getParcelableExtra(DriverAdapter.CALL_DRIVER_KEY);
+            String locationAddress = getIntent().getStringExtra(DriverAdapter.LOCATION_ADDRESS_KEY);
+            destinationAddress = getIntent().getStringExtra(DriverAdapter.DESTINATION_ADDRESS_KEY);
+            int tripPrice = getIntent().getIntExtra(DriverAdapter.PRICE_KEY, 0);
+
+            Bundle bundle = getIntent().getParcelableExtra(DriverAdapter.DESTINATION_LOCATION_BUNDLE);
+            destinationLocation = bundle.getParcelable(DriverAdapter.DESTINATION_LOCATION_KEY);
+
+            // update ui
+            pickUpAddressTextView.setText(locationAddress);
+            dropOfAddressTextView.setText(destinationAddress);
+            feeTextView.setText(getString(R.string.price_text, String.valueOf(tripPrice)));
+
+            // send request to driver
+            sendRequestToDiver();
+        }
     }
 
     private void setupToolbar() {
@@ -103,7 +122,7 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
         callToolbar = findViewById(R.id.call_toolbar);
         loadingIndicator = findViewById(R.id.loading_indicator);
         pickUpAddressTextView = findViewById(R.id.tv_pick_up_address);
-        droffOfAddressTextView = findViewById(R.id.tv_drop_off_address);
+        dropOfAddressTextView = findViewById(R.id.tv_drop_off_address);
         feeTextView = findViewById(R.id.fee_text_view);
         phoneTextView = findViewById(R.id.phone_text_view);
         licensePlatesTextView = findViewById(R.id.license_plates_text_view);
@@ -118,8 +137,8 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             }
             case R.id.phone_text_view: {
-                if (phoneNumberDriver != null) {
-                    callPhoneToDriver(phoneNumberDriver);
+                if (driver.getPhone() != null) {
+                    callPhoneToDriver();
                 }
                 break;
             }
@@ -127,11 +146,11 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void sendRequestToDiver() {
-        if (driverId != null && destinationAdress != null & destinationLocation != null) {
+        if (driver.getId() != null && destinationAddress != null & destinationLocation != null) {
             DatabaseReference tokenTable = FirebaseDatabase
                     .getInstance()
                     .getReference(MyFirebaseIdServices.TOKEN_TABLE_NAME);
-            tokenTable.orderByKey().equalTo(driverId)
+            tokenTable.orderByKey().equalTo(driver.getId())
                     .addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -147,7 +166,7 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
                                     Body body = new Body(
                                             currentLocationUser,
                                             destinationLocation,
-                                            destinationAdress
+                                            destinationAddress
                                     );
 
                                     // convert body to json
@@ -183,8 +202,9 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
                     public void onResponse(@NonNull Call<Result> call,
                                            @NonNull Response<Result> response) {
                         if (response.isSuccessful()) {
-                            showSnackBar(getString(R.string.send_message_to_driver_success));
 
+                            loadingIndicator.setVisibility(View.INVISIBLE);
+                            showSnackBar(getString(R.string.send_message_to_driver_success));
                             // add driver phone and driver license plates here
                             displayPhoneAndLicenses();
 
@@ -205,11 +225,11 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
         // display phone and licensePlates on screen
         driverDetail.setVisibility(View.VISIBLE);
 
-        phoneTextView.setText(phoneNumberDriver);
-        licensePlatesTextView.setText(licensePlatesDriver);
+        phoneTextView.setText(driver.getPhone());
+        licensePlatesTextView.setText(driver.getLicensePlates());
     }
 
-    private void callPhoneToDriver(final String phoneNumberDriver) {
+    private void callPhoneToDriver() {
         Dexter.withActivity(this)
                 .withPermission(Manifest.permission.CALL_PHONE)
                 .withListener(new PermissionListener() {
@@ -221,7 +241,7 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
                             return;
                         }
                         Intent intentCall = new Intent(Intent.ACTION_CALL);
-                        intentCall.setData(Uri.parse("tel:" + phoneNumberDriver));
+                        intentCall.setData(Uri.parse("tel:" + driver.getPhone()));
                         startActivity(intentCall);
                     }
 
