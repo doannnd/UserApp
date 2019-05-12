@@ -16,8 +16,12 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -25,6 +29,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.InstanceIdResult;
 import com.google.gson.Gson;
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.PermissionToken;
@@ -38,12 +44,16 @@ import com.nguyendinhdoan.userapp.common.Common;
 import com.nguyendinhdoan.userapp.model.Body;
 import com.nguyendinhdoan.userapp.model.Driver;
 import com.nguyendinhdoan.userapp.model.Notification;
+import com.nguyendinhdoan.userapp.model.RateDriver;
 import com.nguyendinhdoan.userapp.model.Result;
 import com.nguyendinhdoan.userapp.model.Sender;
 import com.nguyendinhdoan.userapp.model.Token;
 import com.nguyendinhdoan.userapp.remote.IFirebaseMessagingAPI;
 import com.nguyendinhdoan.userapp.services.MyFirebaseIdServices;
 import com.wang.avi.AVLoadingIndicatorView;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -53,7 +63,6 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
 
     private static final String TAG = "CallActivity";
 
-    private Toolbar callToolbar;
     private AVLoadingIndicatorView loadingIndicator;
     private TextView pickUpAddressTextView;
     private TextView dropOfAddressTextView;
@@ -76,9 +85,39 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_call);
 
+        updateTokenToDatabase();
         initViews();
         setupUI();
         addEvents();
+    }
+
+    private void updateTokenToDatabase() {
+        Log.d(TAG, "updateTokenToDatabase: started");
+        final DatabaseReference tokenTable = FirebaseDatabase.getInstance().getReference(MyFirebaseIdServices.TOKEN_TABLE_NAME);
+
+        FirebaseInstanceId.getInstance().getInstanceId().addOnSuccessListener(new OnSuccessListener<InstanceIdResult>() {
+            @Override
+            public void onSuccess(InstanceIdResult instanceIdResult) {
+                String newToken = instanceIdResult.getToken();
+                Token token = new Token(newToken);
+
+                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                if (user != null) {
+                    String userId = user.getUid();
+                    tokenTable.child(userId).setValue(token)
+                            .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Void> task) {
+                                    if (task.isSuccessful()) {
+                                        Log.d(TAG, "update token at [UserActivity] success ");
+                                    } else {
+                                        Log.e(TAG, "update new token at [UserActivity] failed ");
+                                    }
+                                }
+                            });
+                }
+            }
+        });
     }
 
     private void addEvents() {
@@ -87,7 +126,6 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void setupUI() {
-        setupToolbar();
         displayTripDetail();
     }
 
@@ -111,15 +149,8 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private void setupToolbar() {
-        setSupportActionBar(callToolbar);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayShowTitleEnabled(false);
-        }
-    }
 
     private void initViews() {
-        callToolbar = findViewById(R.id.call_toolbar);
         loadingIndicator = findViewById(R.id.loading_indicator);
         pickUpAddressTextView = findViewById(R.id.tv_pick_up_address);
         dropOfAddressTextView = findViewById(R.id.tv_drop_off_address);
@@ -146,6 +177,9 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void sendRequestToDiver() {
+        Log.d(TAG, "driver_id: " + driver.getId());
+        Log.d(TAG, "destination address: " + destinationAddress);
+        Log.d(TAG, "destination location" + destinationLocation);
         if (driver.getId() != null && destinationAddress != null & destinationLocation != null) {
             DatabaseReference tokenTable = FirebaseDatabase
                     .getInstance()
@@ -262,4 +296,80 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
     private void showSnackBar(String message) {
         Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_LONG).show();
     }
+
+   /* @Override
+    public void onNegativeButtonClicked() {
+        Toast.makeText(this, "cancel", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onNeutralButtonClicked() {
+        Toast.makeText(this, "later", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onPositiveButtonClicked(int rates, @NonNull String comments) {
+        RateDriver rateDriver = new RateDriver(String.valueOf(rates), comments);
+
+        rateDriverTable.child(Common.driverId)
+                .push()
+                .setValue(rateDriver)
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+
+                            // if success , calculate average of rate and update to Driver information
+                            rateDriverTable.child(Common.driverId)
+                                    .addValueEventListener(new ValueEventListener() {
+                                        @Override
+                                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                            double sumStar = 0.0;
+                                            int count = 0;
+                                            for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
+                                                RateDriver rateDriver1 = postSnapshot.getValue(RateDriver.class);
+                                                if (rateDriver1 != null) {
+                                                    sumStar += Double.parseDouble(rateDriver1.getRates());
+                                                    count++;
+                                                }
+                                            }
+                                            double averageStar = sumStar / count;
+                                            DecimalFormat df = new DecimalFormat("#.#");
+                                            String valueUpdate = df.format(averageStar);
+
+
+                                            // create object update
+                                            Map<String, Object> driverUpdateRate = new HashMap<>();
+                                            driverUpdateRate.put("rates", valueUpdate);
+
+                                            driverTable.child(Common.driverId).updateChildren(driverUpdateRate)
+                                                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                        @Override
+                                                        public void onComplete(@NonNull Task<Void> task) {
+                                                            if (task.isSuccessful()) {
+                                                                showSnackBar("Thank you your submit");
+                                                                // reset pickup request
+                                                                findGeoQuery.removeAllListeners();
+                                                                //driverCallButton.setEnabled(true);
+                                                                Common.driverId = "";
+                                                                Common.isDriverFound = false;
+                                                            } else {
+                                                                showSnackBar("rate updated but can't write to driver table");
+                                                            }
+                                                        }
+                                                    });
+                                        }
+
+                                        @Override
+                                        public void onCancelled(@NonNull DatabaseError databaseError) {
+                                            Log.e(TAG, "onCancelled: error" + databaseError);
+                                        }
+                                    });
+
+                        } else {
+                            Toast.makeText(UserActivity.this, "error occur", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+    }*/
 }

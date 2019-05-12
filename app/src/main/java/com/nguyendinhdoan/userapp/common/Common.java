@@ -42,6 +42,7 @@ public class Common {
     }
 
     public static IGoogleAPI getGoogleAPI() {
+
         return RetrofitClient.getClient(baseURL).create(IGoogleAPI.class);
     }
 

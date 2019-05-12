@@ -104,6 +104,7 @@ import com.nguyendinhdoan.userapp.R;
 import com.nguyendinhdoan.userapp.adapter.DriverAdapter;
 import com.nguyendinhdoan.userapp.common.Common;
 import com.nguyendinhdoan.userapp.model.Driver;
+import com.nguyendinhdoan.userapp.model.RateDriver;
 import com.nguyendinhdoan.userapp.model.Token;
 import com.nguyendinhdoan.userapp.model.User;
 import com.nguyendinhdoan.userapp.remote.IFirebaseMessagingAPI;
@@ -343,36 +344,6 @@ public class UserActivity extends AppCompatActivity
         setupFirebase();
         setupLocation();
         initServices();
-        updateTokenToDatabase();
-    }
-
-    private void updateTokenToDatabase() {
-        Log.d(TAG, "updateTokenToDatabase: started");
-        final DatabaseReference tokenTable = FirebaseDatabase.getInstance().getReference(MyFirebaseIdServices.TOKEN_TABLE_NAME);
-
-        FirebaseInstanceId.getInstance().getInstanceId().addOnSuccessListener(new OnSuccessListener<InstanceIdResult>() {
-            @Override
-            public void onSuccess(InstanceIdResult instanceIdResult) {
-                String newToken = instanceIdResult.getToken();
-                Token token = new Token(newToken);
-
-                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                if (user != null) {
-                    String userId = user.getUid();
-                    tokenTable.child(userId).setValue(token)
-                            .addOnCompleteListener(new OnCompleteListener<Void>() {
-                                @Override
-                                public void onComplete(@NonNull Task<Void> task) {
-                                    if (task.isSuccessful()) {
-                                        Log.d(TAG, "update token at [UserActivity] success ");
-                                    } else {
-                                        Log.e(TAG, "update new token at [UserActivity] failed ");
-                                    }
-                                }
-                            });
-                }
-            }
-        });
     }
 
     private void initServices() {
@@ -1225,7 +1196,7 @@ public class UserActivity extends AppCompatActivity
         adapter.notifyDataSetChanged();
     }
 
-   /* private void findDriver() {
+   /*private void findDriver() {
         findGeoQuery = driverLocationGeoFire.queryAtLocation(
                 new GeoLocation(lastLocation.getLatitude(), lastLocation.getLongitude()), radiusFindDriver
         );
@@ -1302,80 +1273,4 @@ public class UserActivity extends AppCompatActivity
 
     }*/
 
-   /* @Override
-    public void onNegativeButtonClicked() {
-        Toast.makeText(this, "cancel", Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void onNeutralButtonClicked() {
-        Toast.makeText(this, "later", Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void onPositiveButtonClicked(int rates, @NonNull String comments) {
-        RateDriver rateDriver = new RateDriver(String.valueOf(rates), comments);
-
-        rateDriverTable.child(Common.driverId)
-                .push()
-                .setValue(rateDriver)
-                .addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()) {
-
-                            // if success , calculate average of rate and update to Driver information
-                            rateDriverTable.child(Common.driverId)
-                                    .addValueEventListener(new ValueEventListener() {
-                                        @Override
-                                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                            double sumStar = 0.0;
-                                            int count = 0;
-                                            for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
-                                                RateDriver rateDriver1 = postSnapshot.getValue(RateDriver.class);
-                                                if (rateDriver1 != null) {
-                                                    sumStar += Double.parseDouble(rateDriver1.getRates());
-                                                    count++;
-                                                }
-                                            }
-                                            double averageStar = sumStar / count;
-                                            DecimalFormat df = new DecimalFormat("#.#");
-                                            String valueUpdate = df.format(averageStar);
-
-
-                                            // create object update
-                                            Map<String, Object> driverUpdateRate = new HashMap<>();
-                                            driverUpdateRate.put("rates", valueUpdate);
-
-                                            driverTable.child(Common.driverId).updateChildren(driverUpdateRate)
-                                                    .addOnCompleteListener(new OnCompleteListener<Void>() {
-                                                        @Override
-                                                        public void onComplete(@NonNull Task<Void> task) {
-                                                            if (task.isSuccessful()) {
-                                                                showSnackBar("Thank you your submit");
-                                                                // reset pickup request
-                                                                findGeoQuery.removeAllListeners();
-                                                                //driverCallButton.setEnabled(true);
-                                                                Common.driverId = "";
-                                                                Common.isDriverFound = false;
-                                                            } else {
-                                                                showSnackBar("rate updated but can't write to driver table");
-                                                            }
-                                                        }
-                                                    });
-                                        }
-
-                                        @Override
-                                        public void onCancelled(@NonNull DatabaseError databaseError) {
-                                            Log.e(TAG, "onCancelled: error" + databaseError);
-                                        }
-                                    });
-
-                        } else {
-                            Toast.makeText(UserActivity.this, "error occur", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
-    }
-*/
 }

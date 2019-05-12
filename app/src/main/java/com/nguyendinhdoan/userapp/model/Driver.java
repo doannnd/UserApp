@@ -143,18 +143,38 @@ public class Driver implements Parcelable{
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(this.id);
         dest.writeString(this.name);
         dest.writeString(this.email);
         dest.writeString(this.phone);
+        dest.writeString(this.avatarUrl);
+        dest.writeString(this.rates);
+        dest.writeString(this.state);
+        dest.writeString(this.licensePlates);
+        dest.writeString(this.vehicleName);
+        dest.writeString(this.zeroToTwo);
+        dest.writeString(this.threeToTen);
+        dest.writeString(this.elevenToTwenty);
+        dest.writeString(this.biggerTwenty);
     }
 
     protected Driver(Parcel in) {
+        this.id = in.readString();
         this.name = in.readString();
         this.email = in.readString();
         this.phone = in.readString();
+        this.avatarUrl = in.readString();
+        this.rates = in.readString();
+        this.state = in.readString();
+        this.licensePlates = in.readString();
+        this.vehicleName = in.readString();
+        this.zeroToTwo = in.readString();
+        this.threeToTen = in.readString();
+        this.elevenToTwenty = in.readString();
+        this.biggerTwenty = in.readString();
     }
 
-    public static final Parcelable.Creator<Driver> CREATOR = new Parcelable.Creator<Driver>() {
+    public static final Creator<Driver> CREATOR = new Creator<Driver>() {
         @Override
         public Driver createFromParcel(Parcel source) {
             return new Driver(source);
