@@ -42,7 +42,6 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.firebase.geofire.GeoFire;
@@ -85,8 +84,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.iid.FirebaseInstanceId;
-import com.google.firebase.iid.InstanceIdResult;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -104,19 +101,14 @@ import com.nguyendinhdoan.userapp.R;
 import com.nguyendinhdoan.userapp.adapter.DriverAdapter;
 import com.nguyendinhdoan.userapp.common.Common;
 import com.nguyendinhdoan.userapp.model.Driver;
-import com.nguyendinhdoan.userapp.model.RateDriver;
-import com.nguyendinhdoan.userapp.model.Token;
 import com.nguyendinhdoan.userapp.model.User;
-import com.nguyendinhdoan.userapp.remote.IFirebaseMessagingAPI;
 import com.nguyendinhdoan.userapp.remote.IGoogleAPI;
-import com.nguyendinhdoan.userapp.services.MyFirebaseIdServices;
 import com.nguyendinhdoan.userapp.services.MyFirebaseMessaging;
 import com.nguyendinhdoan.userapp.utils.CommonUtils;
 import com.nguyendinhdoan.userapp.widget.CancelDialogFragment;
 import com.stepstone.apprating.AppRatingDialog;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
-import com.wang.avi.AVLoadingIndicatorView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -152,7 +144,6 @@ public class UserActivity extends AppCompatActivity
     private static final long LOCATION_REQUEST_FASTEST_INTERVAL = 3000L;
     private static final float LOCATION_REQUEST_DISPLACEMENT = 10.0F;
     private static final int RADIUS_LOAD_DRIVER_LIMIT = 3; // limit 3km
-    private static final int GOOGLE_MAP_PADDING = 150;
     private static final String VN_CODE = "VN";
     private static final double DISTANCE_RESTRICT = 100000;
     private static final double HEADING_NORTH = 0;
@@ -189,7 +180,6 @@ public class UserActivity extends AppCompatActivity
     private EditText destinationEditText;
     private ProgressBar userProgressBar;
     private FloatingActionButton pickupRequestButton;
-    private AVLoadingIndicatorView loadingDriver;
 
     private GoogleMap userGoogleMap;
     private FusedLocationProviderClient fusedLocationProviderClient;
@@ -231,30 +221,6 @@ public class UserActivity extends AppCompatActivity
     private  String destinationAddress;
     private  String locationAddress;
 
-    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String message = intent.getStringExtra(MyFirebaseMessaging.MESSAGE_KEY);
-            switch (message) {
-                case "cancel": {
-                    Common.driverId = "";
-                    Common.isDriverFound = false;
-                    break;
-                }
-                case "accept":
-                    break;
-                case "DropOff":
-                    showDialog();
-                    break;
-                case "cancelTrip": {
-                    Common.driverId = "";
-                    Common.isDriverFound = false;
-                    showAlertDialog();
-                    break;
-                }
-            }
-        }
-    };
 
     private void showAlertDialog() {
         FragmentManager fm = getSupportFragmentManager();
@@ -298,9 +264,6 @@ public class UserActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user);
 
-        LocalBroadcastManager.getInstance(this).registerReceiver(
-                mMessageReceiver, new IntentFilter(MyFirebaseMessaging.MESSAGE_DRIVER_KEY));
-
         initViews();
         setupUI();
         addEvents();
@@ -332,11 +295,10 @@ public class UserActivity extends AppCompatActivity
         locationTextView = findViewById(R.id.location_address_text_view);
         destinationTextView = findViewById(R.id.destination_address_text_view);
         driverRecyclerView = findViewById(R.id.driver_recycler_view);
-        loadingDriver = findViewById(R.id.loading_driver);
     }
 
     private void setupUI() {
-        Log.d(TAG, "setupUI: started.");
+        setupBroadcastReceiver();
         setupLoading();
         setupToolbar();
         setupNavigationView();
@@ -345,6 +307,11 @@ public class UserActivity extends AppCompatActivity
         setupFirebase();
         setupLocation();
         initServices();
+    }
+
+    private void setupBroadcastReceiver() {
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+                mMessageReceiver, new IntentFilter(MyFirebaseMessaging.MESSAGE_DRIVER_KEY));
     }
 
     private void initServices() {
@@ -732,7 +699,6 @@ public class UserActivity extends AppCompatActivity
 
         if (polyLineAnimator != null) {
             polyLineAnimator.cancel();
-
         }
 
         try {
@@ -1111,7 +1077,6 @@ public class UserActivity extends AppCompatActivity
         if (polyLineAnimator != null) {
             polyLineAnimator.cancel();
         }
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
         super.onDestroy();
     }
 
@@ -1228,6 +1193,25 @@ public class UserActivity extends AppCompatActivity
         driverRecyclerView.setAdapter(adapter);
         adapter.notifyDataSetChanged();
     }
+
+    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String message = intent.getStringExtra(MyFirebaseMessaging.MESSAGE_KEY);
+            switch (message) {
+                case MyFirebaseMessaging.CANCEL_TITLE: {
+                    break;
+                }
+                case MyFirebaseMessaging.ACCEPT_TITLE:
+                    break;
+                case MyFirebaseMessaging.DROP_OFF_TITLE:
+                    break;
+                case MyFirebaseMessaging.CANCEL_TRIP_TITLE: {
+                    break;
+                }
+            }
+        }
+    };
 
    /*private void findDriver() {
         findGeoQuery = driverLocationGeoFire.queryAtLocation(

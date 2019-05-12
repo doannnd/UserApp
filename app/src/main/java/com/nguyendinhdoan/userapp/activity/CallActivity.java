@@ -5,18 +5,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -44,16 +41,11 @@ import com.nguyendinhdoan.userapp.common.Common;
 import com.nguyendinhdoan.userapp.model.Body;
 import com.nguyendinhdoan.userapp.model.Driver;
 import com.nguyendinhdoan.userapp.model.Notification;
-import com.nguyendinhdoan.userapp.model.RateDriver;
 import com.nguyendinhdoan.userapp.model.Result;
 import com.nguyendinhdoan.userapp.model.Sender;
 import com.nguyendinhdoan.userapp.model.Token;
 import com.nguyendinhdoan.userapp.remote.IFirebaseMessagingAPI;
 import com.nguyendinhdoan.userapp.services.MyFirebaseIdServices;
-import com.wang.avi.AVLoadingIndicatorView;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -63,14 +55,11 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
 
     private static final String TAG = "CallActivity";
 
-    private AVLoadingIndicatorView loadingIndicator;
     private TextView pickUpAddressTextView;
     private TextView dropOfAddressTextView;
     private TextView feeTextView;
     private TextView phoneTextView;
-    private TextView licensePlatesTextView;
     private Button cancelButton;
-    private LinearLayout driverDetail;
 
     private Driver driver;
     private String destinationAddress;
@@ -90,6 +79,7 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
         setupUI();
         addEvents();
     }
+
 
     private void updateTokenToDatabase() {
         Log.d(TAG, "updateTokenToDatabase: started");
@@ -151,14 +141,11 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
 
 
     private void initViews() {
-        loadingIndicator = findViewById(R.id.loading_indicator);
         pickUpAddressTextView = findViewById(R.id.tv_pick_up_address);
         dropOfAddressTextView = findViewById(R.id.tv_drop_off_address);
         feeTextView = findViewById(R.id.fee_text_view);
         phoneTextView = findViewById(R.id.phone_text_view);
-        licensePlatesTextView = findViewById(R.id.license_plates_text_view);
         cancelButton = findViewById(R.id.cancel_button);
-        driverDetail = findViewById(R.id.driver_detail);
     }
 
     @Override
@@ -236,12 +223,7 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
                     public void onResponse(@NonNull Call<Result> call,
                                            @NonNull Response<Result> response) {
                         if (response.isSuccessful()) {
-
-                            loadingIndicator.setVisibility(View.INVISIBLE);
-                            showSnackBar(getString(R.string.send_message_to_driver_success));
-                            // add driver phone and driver license plates here
-                            displayPhoneAndLicenses();
-
+                            Log.d(TAG, "CALL USER SUCCESS");
                         } else {
                             showSnackBar(getString(R.string.send_message_to_driver_error));
                         }
@@ -253,14 +235,6 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
                         showSnackBar(t.getMessage());
                     }
                 });
-    }
-
-    private void displayPhoneAndLicenses() {
-        // display phone and licensePlates on screen
-        driverDetail.setVisibility(View.VISIBLE);
-
-        phoneTextView.setText(driver.getPhone());
-        licensePlatesTextView.setText(driver.getLicensePlates());
     }
 
     private void callPhoneToDriver() {
@@ -297,7 +271,13 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
         Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_LONG).show();
     }
 
-   /* @Override
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
+
+
+    /* @Override
     public void onNegativeButtonClicked() {
         Toast.makeText(this, "cancel", Toast.LENGTH_SHORT).show();
     }

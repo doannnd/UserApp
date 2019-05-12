@@ -63,7 +63,7 @@
     <string name="driver_phone">phone: %s</string>
     <string name="call_driver_replace">Call Driver</string>
     <string name="notification_title">user call to driver</string>
-    <string name="send_message_to_driver_error">send message to dirver error</string>
+    <string name="send_message_to_driver_error">call user failed</string>
     <string name="send_message_to_driver_success">Send message to driver success</string>
     <string name="no_driver">No available any driver near you</string>
 
@@ -102,5 +102,6 @@
     <string name="icon_blue">icon blue</string>
     <string name="cancel_button_text">Cancel</string>
     <string name="please_enter_destination_address">Please enter destination address</string>
+    <string name="request_text">The system is processing your request</string>
 
 </resources>
