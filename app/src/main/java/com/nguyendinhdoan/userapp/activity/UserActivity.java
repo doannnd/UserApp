@@ -29,6 +29,8 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -101,8 +103,10 @@ import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 import com.karumi.dexter.listener.single.PermissionListener;
 import com.nguyendinhdoan.userapp.R;
+import com.nguyendinhdoan.userapp.adapter.DriverAdapter;
 import com.nguyendinhdoan.userapp.common.Common;
 import com.nguyendinhdoan.userapp.model.Body;
+import com.nguyendinhdoan.userapp.model.Driver;
 import com.nguyendinhdoan.userapp.model.Notification;
 import com.nguyendinhdoan.userapp.model.RateDriver;
 import com.nguyendinhdoan.userapp.model.Result;
@@ -125,6 +129,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -141,7 +146,7 @@ import retrofit2.Response;
 
 public class UserActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback,
-        View.OnTouchListener, View.OnClickListener, RatingDialogListener {
+        View.OnTouchListener, View.OnClickListener, RatingDialogListener, DriverAdapter.OnItemClickListener {
 
     private static final String PICKUP_REQUEST_TABLE_NAME = "pickup_request";
     private static final String TAG = "USER_ACTIVITY";
@@ -224,6 +229,7 @@ public class UserActivity extends AppCompatActivity
     private TextView distanceTextView;
     private TextView locationTextView;
     private TextView destinationTextView;
+    private RecyclerView driverRecyclerView;
 
     private DatabaseReference driverTable;
     private DatabaseReference rateDriverTable;
@@ -234,6 +240,7 @@ public class UserActivity extends AppCompatActivity
     private Polyline blackPolyline;
     private ValueAnimator polyLineAnimator;
     private IGoogleAPI mServicesGoogle;
+    private List<Driver> driverList;
 
     private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
         @Override
@@ -350,6 +357,7 @@ public class UserActivity extends AppCompatActivity
         distanceTextView = findViewById(R.id.distance_text_view);
         locationTextView = findViewById(R.id.location_address_text_view);
         destinationTextView = findViewById(R.id.destination_address_text_view);
+        driverRecyclerView = findViewById(R.id.driver_recycler_view);
 
      /*   View view = findViewById(R.id.call_driver_bottom_sheet);
         callDriverBehavior = BottomSheetBehavior.from(view);
@@ -439,14 +447,14 @@ public class UserActivity extends AppCompatActivity
                 .findFragmentById(R.id.map);
         if (supportMapFragment != null) {
             supportMapFragment.getMapAsync(this);
-        }
 
-        // add my button location in bottom right
-        View locationButton = ((View) supportMapFragment.getView().findViewById(Integer.parseInt("1")).getParent()).findViewById(Integer.parseInt("2"));
-        RelativeLayout.LayoutParams rlp = (RelativeLayout.LayoutParams) locationButton.getLayoutParams();
-        rlp.addRule(RelativeLayout.ALIGN_PARENT_TOP, 0);
-        rlp.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
-        rlp.setMargins(0, 0, 30, 150);
+            // add my button location in bottom right
+            View locationButton = ((View) Objects.requireNonNull(supportMapFragment.getView()).findViewById(Integer.parseInt("1")).getParent()).findViewById(Integer.parseInt("2"));
+            RelativeLayout.LayoutParams rlp = (RelativeLayout.LayoutParams) locationButton.getLayoutParams();
+            rlp.addRule(RelativeLayout.ALIGN_PARENT_TOP, 0);
+            rlp.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
+            rlp.setMargins(0, 0, 30, 150);
+        }
     }
 
     private void setupNavigationView() {
@@ -1158,7 +1166,7 @@ public class UserActivity extends AppCompatActivity
                                 // Because driver and user is sample properties
                                 // so we can use User model to get Driver class
 
-                                User driver = dataSnapshot.getValue(User.class);
+                                Driver driver = dataSnapshot.getValue(Driver.class);
                                 if (driver != null) {
                                     // show driver with icon car on google map
                                     userGoogleMap.addMarker(new MarkerOptions()
@@ -1168,6 +1176,9 @@ public class UserActivity extends AppCompatActivity
                                             .title(driver.getName())
                                             .snippet(getString(R.string.driver_phone, driver.getPhone()))
                                     );
+                                    // add driver to list
+                                    driverList = new ArrayList<>();
+                                    driverList.add(driver);
                                 }
 
                             }
@@ -1240,8 +1251,8 @@ public class UserActivity extends AppCompatActivity
     public void onClick(View v) {
 
         if (v.getId() == R.id.pickup_request_button) {
-            if (destination != null) {
-                displayAllDriverDetail(destination, destinationLocation);
+            if (destination != null && destinationLocation != null) {
+                displayAllDriverDetail();
             }
         }
 
@@ -1257,7 +1268,7 @@ public class UserActivity extends AppCompatActivity
                 //break;
             }
 
-    private void displayAllDriverDetail(String destination, LatLng destinationLocation) {
+    private void displayAllDriverDetail() {
         /*Toast.makeText(this, "ok", Toast.LENGTH_SHORT).show();*/
         View view = findViewById(R.id.driver_bottom_sheet);
         driverBottomSheetBehavior = BottomSheetBehavior.from(view);
@@ -1268,7 +1279,6 @@ public class UserActivity extends AppCompatActivity
                 String.format(Locale.getDefault(), "%f,%f", lastLocation.getLatitude(), lastLocation.getLongitude()),
                 String.format(Locale.getDefault(), "%f,%f", destinationLocation.latitude, destinationLocation.longitude)
         );
-
     }
 
     private void displayPlaceDetail(String mLocationAddress, String mDestinationAddress) {
@@ -1315,6 +1325,10 @@ public class UserActivity extends AppCompatActivity
                                 distanceTextView.setText(km);
                                 /*calculateMoneyTextView.setText(finalPrice);*/
 
+                                if (driverList != null) {
+                                    loadAllDriverToRecyclerView(driverList, km);
+                                }
+
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             }
@@ -1328,6 +1342,15 @@ public class UserActivity extends AppCompatActivity
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void loadAllDriverToRecyclerView(List<Driver> driverList, String km) {
+        driverRecyclerView.setHasFixedSize(true);
+        driverRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        DriverAdapter adapter = new DriverAdapter(this, driverList, km);
+        driverRecyclerView.setAdapter(adapter);
+        adapter.notifyDataSetChanged();
     }
             /*case R.id.up_image_view: {
                 if (destination != null) {
@@ -1636,7 +1659,7 @@ public class UserActivity extends AppCompatActivity
                                         @Override
                                         public void onCancelled(@NonNull DatabaseError databaseError) {
                                             Log.e(TAG, "onCancelled: error" + databaseError);
-                                        }
+                                       }
                                     });
 
                         } else {
@@ -1644,5 +1667,11 @@ public class UserActivity extends AppCompatActivity
                         }
                     }
                 });
+    }
+
+    @Override
+    public void onItemClicked(int position) {
+        Intent intentCall = CallActivity.start(this);
+        startActivity(intentCall);
     }
 }

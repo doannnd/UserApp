@@ -11,7 +11,60 @@ public class Driver implements Parcelable{
     private String avatarUrl;
     private String rates;
     private String state;
-    private String cancel;
+    private String licensePlates;
+    private String vehicleName;
+    private String zeroToTwo;
+    private String threeToTen;
+    private String elevenToTwenty;
+    private String biggerTwenty;
+
+    public String getLicensePlates() {
+        return licensePlates;
+    }
+
+    public void setLicensePlates(String licensePlates) {
+        this.licensePlates = licensePlates;
+    }
+
+    public String getVehicleName() {
+        return vehicleName;
+    }
+
+    public void setVehicleName(String vehicleName) {
+        this.vehicleName = vehicleName;
+    }
+
+    public String getZeroToTwo() {
+        return zeroToTwo;
+    }
+
+    public void setZeroToTwo(String zeroToTwo) {
+        this.zeroToTwo = zeroToTwo;
+    }
+
+    public String getThreeToTen() {
+        return threeToTen;
+    }
+
+    public void setThreeToTen(String threeToTen) {
+        this.threeToTen = threeToTen;
+    }
+
+    public String getElevenToTwenty() {
+        return elevenToTwenty;
+    }
+
+    public void setElevenToTwenty(String elevenToTwenty) {
+        this.elevenToTwenty = elevenToTwenty;
+    }
+
+    public String getBiggerTwenty() {
+        return biggerTwenty;
+    }
+
+    public void setBiggerTwenty(String biggerTwenty) {
+        this.biggerTwenty = biggerTwenty;
+    }
 
     public Driver(String name, String email, String phone) {
         this.name = name;
@@ -32,14 +85,6 @@ public class Driver implements Parcelable{
 
     public void setState(String state) {
         this.state = state;
-    }
-
-    public String getCancel() {
-        return cancel;
-    }
-
-    public void setCancel(String cancel) {
-        this.cancel = cancel;
     }
 
     public void setRates(String rates) {

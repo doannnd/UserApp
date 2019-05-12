@@ -93,5 +93,13 @@
     <string name="driver_accept_request">DRIVER ACCEPT</string>
     <string name="my_routes">My Routes</string>
     <string name="pickup_request">ĐẶT</string>
+    <string name="price_text">VND: %sK</string>
+    <string name="call_text">Calling…</string>
+    <string name="find_icon">find icon</string>
+    <string name="pick_up">PICK-UP</string>
+    <string name="drop_off">DROP-OFF</string>
+    <string name="icon_green">icon green</string>
+    <string name="icon_blue">icon blue</string>
+    <string name="cancel_button_text">Cancel</string>
 
 </resources>

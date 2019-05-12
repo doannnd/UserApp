@@ -16,9 +16,11 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".activity.HistoryActivity"
-            android:screenOrientation="portrait"
-            android:parentActivityName=".activity.UserActivity"/>
+        <activity android:name=".activity.CallActivity"></activity>
+        <activity
+            android:name=".activity.HistoryActivity"
+            android:parentActivityName=".activity.UserActivity"
+            android:screenOrientation="portrait" />
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"

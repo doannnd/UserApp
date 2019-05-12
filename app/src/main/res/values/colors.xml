@@ -5,6 +5,7 @@
     <color name="colorAccent">#000000</color>
 
     <color name="colorBackgroundUserCall">#263238</color>
+    <color name="colorBackgroundCall">#4CAF50</color>
 
     <color name="colorWhite">#FFFFFF</color>
     <color name="colorBlack">#000000</color>
@@ -17,5 +18,8 @@
     <color name="hintTextColor">#55000000</color>
     <color name="contentTextColor">@android:color/darker_gray</color>
     <color name="colorCommentBackground">#FAF8F8</color>
+
+    <color name="edit_text_hint">#a4b0b7</color>
+    <color name="light_blue_gray">#eaeff2</color>
 
 </resources>
