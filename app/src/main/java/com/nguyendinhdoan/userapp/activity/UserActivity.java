@@ -36,7 +36,6 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.LinearInterpolator;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -104,7 +103,6 @@ import com.karumi.dexter.listener.single.PermissionListener;
 import com.nguyendinhdoan.userapp.R;
 import com.nguyendinhdoan.userapp.common.Common;
 import com.nguyendinhdoan.userapp.model.Body;
-import com.nguyendinhdoan.userapp.model.Driver;
 import com.nguyendinhdoan.userapp.model.Notification;
 import com.nguyendinhdoan.userapp.model.RateDriver;
 import com.nguyendinhdoan.userapp.model.Result;
@@ -117,7 +115,6 @@ import com.nguyendinhdoan.userapp.services.MyFirebaseIdServices;
 import com.nguyendinhdoan.userapp.services.MyFirebaseMessaging;
 import com.nguyendinhdoan.userapp.utils.CommonUtils;
 import com.nguyendinhdoan.userapp.widget.CancelDialogFragment;
-import com.nguyendinhdoan.userapp.widget.PlaceDetailFragment;
 import com.stepstone.apprating.AppRatingDialog;
 import com.stepstone.apprating.listener.RatingDialogListener;
 import com.theartofdev.edmodo.cropper.CropImage;
@@ -179,6 +176,15 @@ public class UserActivity extends AppCompatActivity
     private static final float POLYLINE_WIDTH = 5F;
     private static final long DIRECTION_ANIMATE_DURATION = 3000L;
 
+    private static final String LOCATION_ADDRESS = "LOCATION_ADDRESS_KEY";
+    private static final String DESTINATION_ADDRESS = "DESTINATION_ADDRESS_KEY";
+    private static final String DIRECTION_LEGS_KEY = "legs";
+    private static final String DIRECTION_DURATION_KEY = "duration";
+    private static final String DIRECTION_DISTANCE_KEY = "distance";
+    private static final String DIRECTION_ADDRESS_KEY = "end_address";
+    private static final String DIRECTION_TEXT_KEY = "text";
+    private static final String START_ADDRESS_KEY = "start_address";
+
     private Toolbar toolbar;
     private DrawerLayout drawerLayout;
     private NavigationView navigationView;
@@ -215,13 +221,9 @@ public class UserActivity extends AppCompatActivity
     private AlertDialog loading;
 
     private BottomSheetBehavior driverBottomSheetBehavior;
-    private TextView driverNameTextView;
-    private TextView driverStarTextView;
-    private TextView driverPhoneTextView;
-    private Button driverCallButton;
-    private TextView resultCallDriverTextView;
-
-    private String phoneNumberDriver;
+    private TextView distanceTextView;
+    private TextView locationTextView;
+    private TextView destinationTextView;
 
     private DatabaseReference driverTable;
     private DatabaseReference rateDriverTable;
@@ -231,7 +233,7 @@ public class UserActivity extends AppCompatActivity
     private Polyline grayPolyline;
     private Polyline blackPolyline;
     private ValueAnimator polyLineAnimator;
-    private IGoogleAPI mServiesGoogle;
+    private IGoogleAPI mServicesGoogle;
 
     private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
         @Override
@@ -339,13 +341,15 @@ public class UserActivity extends AppCompatActivity
     }
 
     private void initViews() {
-        Log.d(TAG, "initViews: started.");
         toolbar = findViewById(R.id.toolbar);
         drawerLayout = findViewById(R.id.drawer_layout);
         navigationView = findViewById(R.id.nav_view);
         destinationEditText = findViewById(R.id.destination_edit_text);
         userProgressBar = findViewById(R.id.user_progress_bar);
         pickupRequestButton = findViewById(R.id.pickup_request_button);
+        distanceTextView = findViewById(R.id.distance_text_view);
+        locationTextView = findViewById(R.id.location_address_text_view);
+        destinationTextView = findViewById(R.id.destination_address_text_view);
 
      /*   View view = findViewById(R.id.call_driver_bottom_sheet);
         callDriverBehavior = BottomSheetBehavior.from(view);
@@ -400,7 +404,7 @@ public class UserActivity extends AppCompatActivity
 
     private void initServices() {
         mServices = Common.getFirebaseMessagingAPI();
-        mServiesGoogle = Common.getGoogleAPI();
+        mServicesGoogle = Common.getGoogleAPI();
     }
 
     private void setupFirebase() {
@@ -816,7 +820,7 @@ public class UserActivity extends AppCompatActivity
             Log.d(TAG, "direction url: " + directionURL);
 
             // show direction
-            mServiesGoogle.getDirectionPath(directionURL)
+            mServicesGoogle.getDirectionPath(directionURL)
                     .enqueue(new Callback<String>() {
                         @Override
                         public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
@@ -1254,10 +1258,76 @@ public class UserActivity extends AppCompatActivity
             }
 
     private void displayAllDriverDetail(String destination, LatLng destinationLocation) {
-        Toast.makeText(this, "ok", Toast.LENGTH_SHORT).show();
+        /*Toast.makeText(this, "ok", Toast.LENGTH_SHORT).show();*/
         View view = findViewById(R.id.driver_bottom_sheet);
         driverBottomSheetBehavior = BottomSheetBehavior.from(view);
         driverBottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+
+        // display information detail of trip
+        displayPlaceDetail(
+                String.format(Locale.getDefault(), "%f,%f", lastLocation.getLatitude(), lastLocation.getLongitude()),
+                String.format(Locale.getDefault(), "%f,%f", destinationLocation.latitude, destinationLocation.longitude)
+        );
+
+    }
+
+    private void displayPlaceDetail(String mLocationAddress, String mDestinationAddress) {
+        try {
+            String userCallURL = Common.directionURL(mLocationAddress, mDestinationAddress);
+
+            mServicesGoogle.getDirectionPath(userCallURL)
+                    .enqueue(new Callback<String>() {
+                        @Override
+                        public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
+                            try {
+                                JSONObject root = new JSONObject(response.body());
+                                JSONArray routes = root.getJSONArray(DIRECTION_ROUTES_KEY);
+                                JSONObject routeObject = routes.getJSONObject(0);
+                                JSONArray legs = routeObject.getJSONArray(DIRECTION_LEGS_KEY);
+                                JSONObject legObject = legs.getJSONObject(0);
+
+                               /* // get time and display on time text view
+                                JSONObject time = legObject.getJSONObject(DIRECTION_DURATION_KEY);
+                                String minutes = time.getString(DIRECTION_TEXT_KEY);
+                                Log.d(TAG, "minutes: " + time.getString(DIRECTION_TEXT_KEY));
+
+                                int timeFormatted = Integer.parseInt(minutes.replaceAll("\\D+", ""));*/
+
+                                // get distance and display on distance text view
+                                JSONObject distance = legObject.getJSONObject(DIRECTION_DISTANCE_KEY);
+                                String km = distance.getString(DIRECTION_TEXT_KEY);
+                                Log.d(TAG, "km: " + distance.getString(DIRECTION_TEXT_KEY));
+
+                                double distanceFormatted = Double.parseDouble(km.replaceAll("[^0-9\\\\.]", ""));
+
+                                /*String finalPrice = String.format(Locale.getDefault(), "%s km + %s minute = $%.2f", distanceFormatted, timeFormatted,
+                                        Common.getPrice(distanceFormatted, timeFormatted));*/
+
+                                // get end address and display on address text view
+                                String destinationAddress = legObject.getString(DIRECTION_ADDRESS_KEY);
+                                String locationAddress = legObject.getString(START_ADDRESS_KEY);
+                                Log.d(TAG, "destination address: " + destinationAddress);
+                                Log.d(TAG, "location address: " + locationAddress);
+
+                                // set value for text view
+                                locationTextView.setText(locationAddress);
+                                destinationTextView.setText(destinationAddress);
+                                distanceTextView.setText(km);
+                                /*calculateMoneyTextView.setText(finalPrice);*/
+
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
+                            Log.e(TAG, "error load information user : time, distance, address");
+                        }
+                    });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
             /*case R.id.up_image_view: {
                 if (destination != null) {
@@ -1553,7 +1623,7 @@ public class UserActivity extends AppCompatActivity
                                                                 showSnackBar("Thank you your submit");
                                                                 // reset pickup request
                                                                 findGeoQuery.removeAllListeners();
-                                                                driverCallButton.setEnabled(true);
+                                                                //driverCallButton.setEnabled(true);
                                                                 Common.driverId = "";
                                                                 Common.isDriverFound = false;
                                                             } else {
