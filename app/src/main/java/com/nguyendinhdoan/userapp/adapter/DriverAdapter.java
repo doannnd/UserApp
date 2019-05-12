@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,6 +23,7 @@ import java.util.List;
 
 public class DriverAdapter extends RecyclerView.Adapter<DriverAdapter.ViewHolder> {
 
+    private static final String TAG = "DriverAdapter";
     public static final String CALL_DRIVER_KEY = "CALL_DRIVER_KEY";
     public static final String LOCATION_ADDRESS_KEY = "LOCATION_ADDRESS_KEY";
     public static final String DESTINATION_ADDRESS_KEY = "DESTINATION_ADDRESS_KEY";
@@ -88,6 +90,7 @@ public class DriverAdapter extends RecyclerView.Adapter<DriverAdapter.ViewHolder
     }
 
     private void calculateTripFee(ViewHolder viewHolder, Driver driver) {
+        Log.d(TAG, "distance: " + distance);
         String[] distances = distance.split(" ");
         String valueDistance = distances[0];
         String unitDistance = distances[1];

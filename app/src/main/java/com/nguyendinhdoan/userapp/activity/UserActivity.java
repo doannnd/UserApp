@@ -116,6 +116,7 @@ import com.nguyendinhdoan.userapp.widget.CancelDialogFragment;
 import com.stepstone.apprating.AppRatingDialog;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
+import com.wang.avi.AVLoadingIndicatorView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -188,6 +189,7 @@ public class UserActivity extends AppCompatActivity
     private EditText destinationEditText;
     private ProgressBar userProgressBar;
     private FloatingActionButton pickupRequestButton;
+    private AVLoadingIndicatorView loadingDriver;
 
     private GoogleMap userGoogleMap;
     private FusedLocationProviderClient fusedLocationProviderClient;
@@ -198,9 +200,6 @@ public class UserActivity extends AppCompatActivity
     private GeoFire driverLocationGeoFire;
 
     private int radiusLoadAllDriver = 1; // 1km
-    private int radiusFindDriver = 0; // 1km
-
-    private IFirebaseMessagingAPI mServices;
     private LatLng destinationLocation;
     private String destination;
 
@@ -213,7 +212,6 @@ public class UserActivity extends AppCompatActivity
     private StorageReference storageReference;
     private AlertDialog loading;
 
-    private BottomSheetBehavior driverBottomSheetBehavior;
     private TextView distanceTextView;
     private TextView locationTextView;
     private TextView destinationTextView;
@@ -229,7 +227,9 @@ public class UserActivity extends AppCompatActivity
     private ValueAnimator polyLineAnimator;
     private IGoogleAPI mServicesGoogle;
     private List<Driver> driverList;
-    private  DriverAdapter adapter;
+    private String km;
+    private  String destinationAddress;
+    private  String locationAddress;
 
     private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
         @Override
@@ -332,6 +332,7 @@ public class UserActivity extends AppCompatActivity
         locationTextView = findViewById(R.id.location_address_text_view);
         destinationTextView = findViewById(R.id.destination_address_text_view);
         driverRecyclerView = findViewById(R.id.driver_recycler_view);
+        loadingDriver = findViewById(R.id.loading_driver);
     }
 
     private void setupUI() {
@@ -347,7 +348,6 @@ public class UserActivity extends AppCompatActivity
     }
 
     private void initServices() {
-        mServices = Common.getFirebaseMessagingAPI();
         mServicesGoogle = Common.getGoogleAPI();
     }
 
@@ -732,6 +732,7 @@ public class UserActivity extends AppCompatActivity
 
         if (polyLineAnimator != null) {
             polyLineAnimator.cancel();
+
         }
 
         try {
@@ -977,7 +978,6 @@ public class UserActivity extends AppCompatActivity
         userProgressBar.setVisibility(View.INVISIBLE);
 
         if (directionPolylineList != null) {
-            userGoogleMap.clear();
             handleDriverDirection(destinationLocation);
         }
 
@@ -989,6 +989,27 @@ public class UserActivity extends AppCompatActivity
     }
 
     private void loadAllAvailableDriver() {
+        driverList = new ArrayList<>();
+
+        if (directionPolylineList != null) {
+            loadAllDriverToRecyclerView(
+                    driverList,
+                    km,
+                    locationAddress,
+                    destinationAddress,
+                    destinationLocation
+            );
+        }
+
+        userGoogleMap.clear();
+
+        if (directionPolylineList != null) {
+            handleDriverDirection(destinationLocation);
+        }
+
+        if (polyLineAnimator != null) {
+            polyLineAnimator.cancel();
+        }
 
         GeoQuery loadAllGeoQuery = driverLocationGeoFire.queryAtLocation(new GeoLocation(
                 Common.lastLocation.getLatitude(), Common.lastLocation.getLongitude()), radiusLoadAllDriver);
@@ -1004,6 +1025,7 @@ public class UserActivity extends AppCompatActivity
                             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                                 Driver driver = dataSnapshot.getValue(Driver.class);
                                 if (driver != null) {
+
                                     // show driver with icon car on google map
                                     userGoogleMap.addMarker(new MarkerOptions()
                                             .position(new LatLng(location.latitude, location.longitude))
@@ -1013,8 +1035,20 @@ public class UserActivity extends AppCompatActivity
                                             .snippet(driver.getPhone())
                                     );
                                     // add driver to list
-                                    driverList = new ArrayList<>();
-                                    driverList.add(driver);
+                                    if (!driverList.contains(driver)) {
+                                        driverList.add(driver);
+                                    }
+
+                                    if (directionPolylineList != null) {
+                                        loadAllDriverToRecyclerView(
+                                                driverList,
+                                                km,
+                                                locationAddress,
+                                                destinationAddress,
+                                                destinationLocation
+                                        );
+                                    }
+
                                 }
 
                             }
@@ -1029,7 +1063,6 @@ public class UserActivity extends AppCompatActivity
 
             @Override
             public void onKeyExited(String key) {
-
             }
 
             @Override
@@ -1113,11 +1146,11 @@ public class UserActivity extends AppCompatActivity
 
     private void showDestinationDetail() {
         if (destinationLocation != null && destination != null) {
+            // display information detail of trip
             View view = findViewById(R.id.driver_bottom_sheet);
-            driverBottomSheetBehavior = BottomSheetBehavior.from(view);
+            BottomSheetBehavior driverBottomSheetBehavior = BottomSheetBehavior.from(view);
             driverBottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
 
-            // display information detail of trip
             displayPlaceDetail(
                     String.format(Locale.getDefault(), "%f,%f", Common.lastLocation.getLatitude(), Common.lastLocation.getLongitude()),
                     String.format(Locale.getDefault(), "%f,%f", destinationLocation.latitude, destinationLocation.longitude)
@@ -1151,14 +1184,14 @@ public class UserActivity extends AppCompatActivity
 
                                 // get distance and display on distance text view
                                 JSONObject distance = legObject.getJSONObject(DIRECTION_DISTANCE_KEY);
-                                String km = distance.getString(DIRECTION_TEXT_KEY);
+                                km = distance.getString(DIRECTION_TEXT_KEY);
                                 Log.d(TAG, "km: " + distance.getString(DIRECTION_TEXT_KEY));
 
                                 //double distanceFormatted = Double.parseDouble(km.replaceAll("[^0-9\\\\.]", ""));
 
                                 // get end address and display on address text view
-                                String destinationAddress = legObject.getString(DIRECTION_ADDRESS_KEY);
-                                String locationAddress = legObject.getString(START_ADDRESS_KEY);
+                                destinationAddress = legObject.getString(DIRECTION_ADDRESS_KEY);
+                                locationAddress = legObject.getString(START_ADDRESS_KEY);
                                 Log.d(TAG, "destination address: " + destinationAddress);
                                 Log.d(TAG, "location address: " + locationAddress);
 
@@ -1191,7 +1224,7 @@ public class UserActivity extends AppCompatActivity
         driverRecyclerView.setHasFixedSize(true);
         driverRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        adapter = new DriverAdapter(this, driverList, km, locationAddress, destinationAddress, destinationLocation);
+        DriverAdapter adapter = new DriverAdapter(this, driverList, km, locationAddress, destinationAddress, destinationLocation);
         driverRecyclerView.setAdapter(adapter);
         adapter.notifyDataSetChanged();
     }

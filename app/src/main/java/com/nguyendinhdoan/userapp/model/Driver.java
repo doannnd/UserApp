@@ -3,6 +3,8 @@ package com.nguyendinhdoan.userapp.model;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.util.Objects;
+
 public class Driver implements Parcelable{
 
     private String id;
@@ -185,4 +187,29 @@ public class Driver implements Parcelable{
             return new Driver[size];
         }
     };
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Driver)) return false;
+        Driver driver = (Driver) o;
+        return Objects.equals(getId(), driver.getId()) &&
+                Objects.equals(getName(), driver.getName()) &&
+                Objects.equals(getEmail(), driver.getEmail()) &&
+                Objects.equals(getPhone(), driver.getPhone()) &&
+                Objects.equals(getAvatarUrl(), driver.getAvatarUrl()) &&
+                Objects.equals(getRates(), driver.getRates()) &&
+                Objects.equals(getState(), driver.getState()) &&
+                Objects.equals(getLicensePlates(), driver.getLicensePlates()) &&
+                Objects.equals(getVehicleName(), driver.getVehicleName()) &&
+                Objects.equals(getZeroToTwo(), driver.getZeroToTwo()) &&
+                Objects.equals(getThreeToTen(), driver.getThreeToTen()) &&
+                Objects.equals(getElevenToTwenty(), driver.getElevenToTwenty()) &&
+                Objects.equals(getBiggerTwenty(), driver.getBiggerTwenty());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getId(), getName(), getEmail(), getPhone(), getAvatarUrl(), getRates(), getState(), getLicensePlates(), getVehicleName(), getZeroToTwo(), getThreeToTen(), getElevenToTwenty(), getBiggerTwenty());
+    }
 }
