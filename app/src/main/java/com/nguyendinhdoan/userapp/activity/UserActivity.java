@@ -1005,12 +1005,19 @@ public class UserActivity extends AppCompatActivity
 
         userProgressBar.setVisibility(View.INVISIBLE);
 
+        if (directionPolylineList != null) {
+            userGoogleMap.clear();
+            handleDriverDirection(destinationLocation);
+        }
+
+        if (polyLineAnimator != null) {
+            polyLineAnimator.cancel();
+        }
+
         loadAllAvailableDriver();
     }
 
     private void loadAllAvailableDriver() {
-
-        updateDirectionUser();
 
         GeoQuery loadAllGeoQuery = driverLocationGeoFire.queryAtLocation(new GeoLocation(
                 Common.lastLocation.getLatitude(), Common.lastLocation.getLongitude()), radiusLoadAllDriver);
@@ -1073,17 +1080,6 @@ public class UserActivity extends AppCompatActivity
             }
         });
 
-    }
-
-    private void updateDirectionUser() {
-        if (directionPolylineList != null) {
-            userGoogleMap.clear();
-            handleDriverDirection(destinationLocation);
-        }
-
-        if (polyLineAnimator != null) {
-            polyLineAnimator.cancel();
-        }
     }
 
     private void buildLocationRequest() {
