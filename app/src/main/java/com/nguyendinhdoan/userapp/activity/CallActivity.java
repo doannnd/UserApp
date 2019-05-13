@@ -68,6 +68,7 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
     private static final String NOTIFICATION_KEY = "cancel";
     public static final String MESSAGE_CANCEL_KEY = "MESSAGE_CANCEL_KEY";
     public static final String MESSAGE_ACCEPT_KEY = "MESSAGE_ACCEPT_KEY";
+    public static final String DESTINATION_LOCATION_CALL_KEY = "DESTINATION_LOCATION_CALL_KEY";
 
     private TextView pickUpAddressTextView;
     private TextView dropOfAddressTextView;
@@ -340,6 +341,7 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
     private void handleDriverAcceptBooking() {
         Intent intentTracking = TrackingActivity.start(this);
         intentTracking.putExtra(MESSAGE_ACCEPT_KEY, driver);
+        intentTracking.putExtra(DESTINATION_LOCATION_CALL_KEY, destinationLocation);
         intentTracking.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intentTracking);
         finish();

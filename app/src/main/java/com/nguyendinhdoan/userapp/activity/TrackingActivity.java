@@ -30,12 +30,14 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -102,6 +104,8 @@ public class TrackingActivity extends AppCompatActivity implements OnMapReadyCal
     private static final String DRIVER_TABLE_NAME = "drivers";
     private static final String STATE_KEY = "state";
     public static final String DRIVER_CANCEL_TRI_KEY = "DRIVER_CANCEL_TRI_KEY";
+    private static final int TRACKING_DIRECTION_PADDING = 150;
+    public static final String END_ADDRESS_KEY = "end_address";
 
     private TextView timeTextView;
     private TextView introTextView;
@@ -120,6 +124,8 @@ public class TrackingActivity extends AppCompatActivity implements OnMapReadyCal
     private LocationRequest locationRequest;
 
     private Driver driver;
+    private LatLng destinationLocation;
+    private boolean isArrived = false;
 
     public static Intent start(Context context) {
         return new Intent(context, TrackingActivity.class);
@@ -267,6 +273,10 @@ public class TrackingActivity extends AppCompatActivity implements OnMapReadyCal
 
         trackingMap.clear();
 
+        if (isArrived) {
+            displayMarkerDestinationLocation();
+        }
+
         if (driver != null) {
             DatabaseReference driverLocationTable = FirebaseDatabase.getInstance().getReference(DRIVER_LOCATION_TABLE_NAME);
             GeoFire driverLocationGeoFire = new GeoFire(driverLocationTable);
@@ -281,7 +291,10 @@ public class TrackingActivity extends AppCompatActivity implements OnMapReadyCal
                                 .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_car))
                         );
 
-                        loadTimeDriverToUser(location);
+                        if (!isArrived) {
+                            loadTimeDriverToUser(location);
+                        }
+
                     }
                 }
 
@@ -354,6 +367,8 @@ public class TrackingActivity extends AppCompatActivity implements OnMapReadyCal
     private void getDataDriver() {
         if (getIntent() != null) {
             driver = getIntent().getParcelableExtra(CallActivity.MESSAGE_ACCEPT_KEY);
+            destinationLocation = getIntent().getParcelableExtra(CallActivity.DESTINATION_LOCATION_CALL_KEY);
+            Log.d(TAG, "destination location: " + destinationLocation);
             if (driver != null) {
                 showAcceptDialog();
             }
@@ -536,6 +551,7 @@ public class TrackingActivity extends AppCompatActivity implements OnMapReadyCal
             String message = intent.getStringExtra(MyFirebaseMessaging.MESSAGE_KEY);
             switch (message) {
                 case MyFirebaseMessaging.ARRIVED_TITLE: {
+                    isArrived = true;
                     introTextView.setText(getString(R.string.driver_has_arrived));
                     break;
                 }
@@ -547,13 +563,88 @@ public class TrackingActivity extends AppCompatActivity implements OnMapReadyCal
                     finish();
                     break;
                 }
-                case MyFirebaseMessaging.DROP_OFF_TITLE: {
+                case MyFirebaseMessaging.START_TRIP_TITLE: {
 
+                    cancelButton.setVisibility(View.GONE);
+
+                    if (destinationLocation != null) {
+                        displayMarkerDestinationLocation();
+                    }
+                    break;
+                }
+                case MyFirebaseMessaging.DROP_OFF_TITLE: {
                     break;
                 }
             }
         }
     };
+
+    private void displayMarkerDestinationLocation() {
+        loadInforTrip();
+
+        // adjusting bound
+        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+        builder.include(new LatLng(Common.lastLocation.getLatitude(),
+                Common.lastLocation.getLongitude()));
+        builder.include(destinationLocation);
+
+        // handle display camera
+        LatLngBounds bounds = builder.build();
+        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngBounds(bounds, TRACKING_DIRECTION_PADDING);
+        trackingMap.moveCamera(cameraUpdate);
+
+         trackingMap.addMarker(
+                new MarkerOptions().position(destinationLocation)
+                .icon(BitmapDescriptorFactory.defaultMarker())
+        );
+    }
+
+    private void loadInforTrip() {
+        String currentLocation = String.format(Locale.getDefault(), "%f,%f",
+                Common.lastLocation.getLatitude(), Common.lastLocation.getLongitude());
+        String driverLocation = String.format(Locale.getDefault(), "%f,%f",
+                destinationLocation.latitude, destinationLocation.longitude);
+
+        try {
+            String trackingURL = Common.directionURL(currentLocation, driverLocation);
+            Log.d(TAG, "destination url: " + trackingURL);
+
+            IGoogleAPI mService = Common.getGoogleAPI();
+            mService.getDirectionPath(trackingURL)
+                    .enqueue(new Callback<String>() {
+                        @Override
+                        public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
+                            try {
+                                JSONObject root = new JSONObject(response.body());
+                                JSONArray routes = root.getJSONArray(DIRECTION_ROUTES_KEY);
+                                JSONObject routeObject = routes.getJSONObject(ROUTES_INDEX);
+                                JSONArray legs = routeObject.getJSONArray(DIRECTION_LEGS_KEY);
+                                JSONObject legObject = legs.getJSONObject(LEGS_INDEX);
+
+                                // get time and display on time text view
+                                JSONObject time = legObject.getJSONObject(DIRECTION_DURATION_KEY);
+                                String minutes = time.getString(DIRECTION_TEXT_KEY);
+                                Log.d(TAG, "minutes: " + time.getString(DIRECTION_TEXT_KEY));
+
+                                String endAddress = legObject.getString(END_ADDRESS_KEY);
+
+                                // set time text view
+                                timeTextView.setText(minutes);
+                                introTextView.setText(getString(R.string.intro_start_trip, endAddress));
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
+                            Log.e(TAG, "error load information time");
+                        }
+                    });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     @Override
     protected void onDestroy() {

@@ -161,10 +161,7 @@ public class UserActivity extends AppCompatActivity
     private static final float POLYLINE_WIDTH = 5F;
     private static final long DIRECTION_ANIMATE_DURATION = 3000L;
 
-    private static final String LOCATION_ADDRESS = "LOCATION_ADDRESS_KEY";
-    private static final String DESTINATION_ADDRESS = "DESTINATION_ADDRESS_KEY";
     private static final String DIRECTION_LEGS_KEY = "legs";
-    private static final String DIRECTION_DURATION_KEY = "duration";
     private static final String DIRECTION_DISTANCE_KEY = "distance";
     private static final String DIRECTION_ADDRESS_KEY = "end_address";
     private static final String DIRECTION_TEXT_KEY = "text";

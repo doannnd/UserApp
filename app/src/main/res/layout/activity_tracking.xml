@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    android:layout_height="match_parent">
 
     <FrameLayout
         android:layout_width="match_parent"
@@ -21,7 +21,7 @@
             android:id="@+id/loading_map"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"/>
+            android:layout_gravity="center" />
 
     </FrameLayout>
 
@@ -33,6 +33,7 @@
         app:behavior_peekHeight="180dp"
         app:layout_behavior="android.support.design.widget.BottomSheetBehavior">
 
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -43,25 +44,28 @@
                 android:layout_width="50dp"
                 android:layout_height="3dp"
                 android:layout_marginTop="8dp"
-                android:background="@drawable/bg_scroll"/>
+                android:background="@drawable/bg_scroll" />
 
             <TextView
                 android:id="@+id/time_text_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                tools:text="1 minute"
+                android:textColor="@android:color/holo_green_dark"
                 android:textSize="22sp"
                 android:textStyle="bold"
-                android:textColor="@android:color/holo_green_dark"/>
+                tools:text="1 minute" />
 
             <TextView
                 android:id="@+id/intro_text_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:gravity="center"
                 android:text="@string/the_driver_is_on_his_way_to_pick_you_up"
-                android:textColor="@android:color/black"/>
-            
+                android:textColor="@android:color/black" />
+
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -73,21 +77,21 @@
                     android:id="@+id/license_plates_text_view"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    tools:text="17H3-9992"
-                    android:textSize="12sp"/>
+                    android:textSize="12sp"
+                    tools:text="17H3-9992" />
 
                 <View
                     android:layout_width="5dp"
                     android:layout_height="5dp"
                     android:layout_margin="4dp"
-                    android:background="@drawable/bg_scroll"/>
+                    android:background="@drawable/bg_scroll" />
 
                 <TextView
                     android:id="@+id/vehicle_name_text_view"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    tools:text="Kia Morning"
-                    android:textSize="12sp"/>
+                    android:textSize="12sp"
+                    tools:text="Kia Morning" />
 
             </LinearLayout>
 
@@ -99,57 +103,57 @@
 
             <android.support.constraint.ConstraintLayout
                 android:id="@+id/root_item"
-                android:padding="8dp"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:padding="8dp">
 
                 <de.hdodenhof.circleimageview.CircleImageView
                     android:id="@+id/avatar_image_view"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
-                    tools:src="@tools:sample/avatars"
-                    app:layout_constraintStart_toStartOf="parent"
                     android:layout_marginStart="8dp"
+                    android:layout_marginTop="8dp"
+                    app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    android:layout_marginTop="8dp" />
+                    tools:src="@tools:sample/avatars" />
 
                 <TextView
                     android:id="@+id/name_text_view"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:fontFamily="@font/amaranth"
-                    tools:text="@tools:sample/full_names"
-                    android:textSize="20sp"
-                    android:textColor="@android:color/black"
-                    app:layout_constraintTop_toTopOf="@+id/avatar_image_view"
-                    app:layout_constraintStart_toEndOf="@+id/avatar_image_view"
                     android:layout_marginStart="8dp"
                     android:layout_marginBottom="8dp"
-                    app:layout_constraintBottom_toTopOf="@+id/star_text_view" />
+                    android:fontFamily="@font/amaranth"
+                    android:textColor="@android:color/black"
+                    android:textSize="20sp"
+                    app:layout_constraintBottom_toTopOf="@+id/star_text_view"
+                    app:layout_constraintStart_toEndOf="@+id/avatar_image_view"
+                    app:layout_constraintTop_toTopOf="@+id/avatar_image_view"
+                    tools:text="@tools:sample/full_names" />
 
                 <TextView
                     android:id="@+id/star_text_view"
                     android:layout_width="wrap_content"
                     android:layout_height="20dp"
-                    android:drawableEnd="@drawable/ic_star"
-                    tools:text="5"
-                    app:layout_constraintBottom_toBottomOf="@+id/avatar_image_view"
-                    app:layout_constraintStart_toEndOf="@+id/avatar_image_view"
                     android:layout_marginStart="8dp"
                     android:layout_marginEnd="8dp"
-                    app:layout_constraintHorizontal_bias="0.050" />
+                    android:drawableEnd="@drawable/ic_star"
+                    app:layout_constraintBottom_toBottomOf="@+id/avatar_image_view"
+                    app:layout_constraintHorizontal_bias="0.050"
+                    app:layout_constraintStart_toEndOf="@+id/avatar_image_view"
+                    tools:text="5" />
 
                 <ImageView
                     android:id="@+id/phone_image_view"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
                     android:layout_marginEnd="8dp"
-                    android:scaleType="fitCenter"
                     android:contentDescription="@string/icon_phone"
+                    android:scaleType="fitCenter"
                     android:src="@drawable/ic_phone_48"
-                    app:layout_constraintTop_toTopOf="@+id/avatar_image_view"
+                    app:layout_constraintBottom_toBottomOf="@id/avatar_image_view"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintBottom_toBottomOf="@id/avatar_image_view"/>
+                    app:layout_constraintTop_toTopOf="@+id/avatar_image_view" />
 
             </android.support.constraint.ConstraintLayout>
 
@@ -162,7 +166,7 @@
                 android:text="@string/cancel_button_text"
                 android:textAllCaps="false"
                 android:textColor="@android:color/white"
-                android:textSize="20sp"/>
+                android:textSize="20sp" />
 
         </LinearLayout>
 

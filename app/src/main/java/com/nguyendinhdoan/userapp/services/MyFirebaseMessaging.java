@@ -23,17 +23,17 @@ import java.util.Objects;
  */
 public class MyFirebaseMessaging extends FirebaseMessagingService {
 
+    public static final String MESSAGE_DRIVER_TRACKING_KEY = "MESSAGE_DRIVER_TRACKING_KEY";
     public static final String MESSAGE_KEY = "MESSAGE_KEY";
     public static final String MESSAGE_DRIVER_KEY = "MESSAGE_DRIVER_KEY";
-    public static final String BODY_KEY = "BODY_KEY";
     public static final String CANCEL_TITLE = "cancel";
     public static final String ACCEPT_TITLE = "accept";
     public static final String ARRIVED_TITLE = "Arrived";
     public static final String DROP_OFF_TITLE = "DropOff";
     public static final String CANCEL_TRIP_TITLE = "cancelTrip";
+    public static final String START_TRIP_TITLE = "startTrip";
     private static final int PENDING_REQUEST_CODE = 0;
     private static final int NOTIFY_ID = 1;
-    public static final String MESSAGE_DRIVER_TRACKING_KEY = "MESSAGE_DRIVER_TRACKING_KEY";
 
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
@@ -62,6 +62,9 @@ public class MyFirebaseMessaging extends FirebaseMessagingService {
                 case CANCEL_TRIP_TITLE:
                     sendMessageToTrackingActivity(title);
                     notification(title, body);
+                    break;
+                case START_TRIP_TITLE:
+                    sendMessageToTrackingActivity(title);
                     break;
             }
         }
