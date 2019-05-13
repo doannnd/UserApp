@@ -47,7 +47,7 @@ public class NotificationUtils extends ContextWrapper {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    public Notification.Builder getUberNotification(String title, String content, PendingIntent contentIntent,
+    public Notification.Builder getUserNotification(String title, String content, PendingIntent contentIntent,
                                                     Uri soundUri) {
         return new Notification.Builder(getApplicationContext(), USER_APP_ID)
                 .setContentText(content)

@@ -92,7 +92,8 @@
     <string name="driver_decline_request">DRIVER DECLINE</string>
     <string name="driver_accept_request">DRIVER ACCEPT</string>
     <string name="my_routes">My Routes</string>
-    <string name="pickup_request">ĐẶT</string>
+    <string name="pickup_request">BOOK
+    </string>
     <string name="price_text">VND: %sK</string>
     <string name="call_text">Calling…</string>
     <string name="find_icon">find icon</string>
@@ -103,5 +104,7 @@
     <string name="cancel_button_text">Cancel</string>
     <string name="please_enter_destination_address">Please enter destination address</string>
     <string name="request_text">The system is processing your request</string>
+    <string name="state_not_working">not_working</string>
+    <string name="message_user_cancel_booking">User cancel booking</string>
 
 </resources>

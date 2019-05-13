@@ -92,7 +92,7 @@ public class MyFirebaseMessaging extends FirebaseMessagingService {
 
         Uri defaultSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         NotificationUtils notificationUtils = new NotificationUtils(getBaseContext());
-        Notification.Builder builder = notificationUtils.getUberNotification(
+        Notification.Builder builder = notificationUtils.getUserNotification(
                 title, body, contentIntent, defaultSound
         );
 

@@ -1,14 +1,17 @@
 package com.nguyendinhdoan.userapp.activity;
 
 import android.Manifest;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -46,6 +49,10 @@ import com.nguyendinhdoan.userapp.model.Sender;
 import com.nguyendinhdoan.userapp.model.Token;
 import com.nguyendinhdoan.userapp.remote.IFirebaseMessagingAPI;
 import com.nguyendinhdoan.userapp.services.MyFirebaseIdServices;
+import com.nguyendinhdoan.userapp.services.MyFirebaseMessaging;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -54,16 +61,20 @@ import retrofit2.Response;
 public class CallActivity extends AppCompatActivity implements View.OnClickListener {
 
     private static final String TAG = "CallActivity";
+    private static final String DRIVER_TABLE_NAME = "drivers";
+    private static final String STATE_KEY = "state";
+    private static final String NOTIFICATION_KEY = "cancel";
 
     private TextView pickUpAddressTextView;
     private TextView dropOfAddressTextView;
     private TextView feeTextView;
-    private TextView phoneTextView;
     private Button cancelButton;
 
     private Driver driver;
     private String destinationAddress;
     private LatLng destinationLocation;
+
+    private IFirebaseMessagingAPI mService;
 
     public static Intent start(Context context) {
         return new Intent(context, CallActivity.class);
@@ -75,48 +86,58 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_call);
 
         updateTokenToDatabase();
+        setupBroadcastReceiver();
         initViews();
         setupUI();
         addEvents();
     }
 
+    private void setupBroadcastReceiver() {
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+                mMessageReceiver, new IntentFilter(MyFirebaseMessaging.MESSAGE_DRIVER_KEY));
+    }
 
     private void updateTokenToDatabase() {
-        Log.d(TAG, "updateTokenToDatabase: started");
-        final DatabaseReference tokenTable = FirebaseDatabase.getInstance().getReference(MyFirebaseIdServices.TOKEN_TABLE_NAME);
+        final DatabaseReference tokenTable = FirebaseDatabase
+                .getInstance().getReference(MyFirebaseIdServices.TOKEN_TABLE_NAME);
 
-        FirebaseInstanceId.getInstance().getInstanceId().addOnSuccessListener(new OnSuccessListener<InstanceIdResult>() {
-            @Override
-            public void onSuccess(InstanceIdResult instanceIdResult) {
-                String newToken = instanceIdResult.getToken();
-                Token token = new Token(newToken);
+        FirebaseInstanceId.getInstance().getInstanceId()
+                .addOnSuccessListener(new OnSuccessListener<InstanceIdResult>() {
+                    @Override
+                    public void onSuccess(InstanceIdResult instanceIdResult) {
+                        String newToken = instanceIdResult.getToken();
+                        Token token = new Token(newToken);
 
-                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                if (user != null) {
-                    String userId = user.getUid();
-                    tokenTable.child(userId).setValue(token)
-                            .addOnCompleteListener(new OnCompleteListener<Void>() {
-                                @Override
-                                public void onComplete(@NonNull Task<Void> task) {
-                                    if (task.isSuccessful()) {
-                                        Log.d(TAG, "update token at [UserActivity] success ");
-                                    } else {
-                                        Log.e(TAG, "update new token at [UserActivity] failed ");
-                                    }
-                                }
-                            });
-                }
-            }
-        });
+                        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                        if (user != null) {
+                            String userId = user.getUid();
+                            tokenTable.child(userId).setValue(token)
+                                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<Void> task) {
+                                            if (task.isSuccessful()) {
+                                                Log.d(TAG, "update token at [UserActivity] success ");
+                                            } else {
+                                                Log.e(TAG, "update new token at [UserActivity] failed ");
+                                            }
+                                        }
+                                    });
+                        }
+                    }
+                });
     }
 
     private void addEvents() {
-        phoneTextView.setOnClickListener(this);
         cancelButton.setOnClickListener(this);
     }
 
     private void setupUI() {
         displayTripDetail();
+        setupService();
+    }
+
+    private void setupService() {
+        mService = Common.getFirebaseMessagingAPI();
     }
 
     private void displayTripDetail() {
@@ -144,7 +165,6 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
         pickUpAddressTextView = findViewById(R.id.tv_pick_up_address);
         dropOfAddressTextView = findViewById(R.id.tv_drop_off_address);
         feeTextView = findViewById(R.id.fee_text_view);
-        phoneTextView = findViewById(R.id.phone_text_view);
         cancelButton = findViewById(R.id.cancel_button);
     }
 
@@ -152,6 +172,7 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.cancel_button: {
+                handleCancelBooking();
                 break;
             }
             case R.id.phone_text_view: {
@@ -163,10 +184,79 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    private void handleCancelBooking() {
+        sendMessageToDriver();
+    }
+
+    private void sendMessageToDriver() {
+        if (driver != null) {
+            DatabaseReference tokenTable = FirebaseDatabase
+                    .getInstance().getReference(MyFirebaseIdServices.TOKEN_TABLE_NAME);
+
+            tokenTable.orderByKey().equalTo(driver.getId())
+                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
+                                Token token = postSnapshot.getValue(Token.class);
+                                if (token != null) {
+                                    String bodyMessage = getString(R.string.message_user_cancel_booking);
+                                    Notification notification = new Notification(NOTIFICATION_KEY, bodyMessage);
+                              
+                                    Sender sender = new Sender(notification, token.getToken());
+                                    handleSendMessage(sender);
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+                            Log.e(TAG, "onCancelled: error" + databaseError);
+                        }
+                    });
+        }
+    }
+
+    private void handleSendMessage(Sender sender) {
+        mService.sendMessage(sender)
+                .enqueue(new Callback<Result>() {
+                    @Override
+                    public void onResponse(@NonNull Call<Result> call, @NonNull Response<Result> response) {
+                        if (response.isSuccessful()) {
+                            updateStateDriver();
+                            finish();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(@NonNull Call<Result> call, @NonNull Throwable t) {
+                        Log.e(TAG, "onFailure: error" + t.getMessage());
+                    }
+                });
+    }
+
+    private void updateStateDriver() {
+        Map<String, Object> driverUpdateState = new HashMap<>();
+        String stateValue = getString(R.string.state_not_working);
+        driverUpdateState.put(STATE_KEY, stateValue);
+
+        DatabaseReference driverTable = FirebaseDatabase.getInstance().getReference(DRIVER_TABLE_NAME);
+        driverTable.child(driver.getId())
+                .updateChildren(driverUpdateState)
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            Log.d(TAG, "update state driver success");
+                        } else {
+                            Log.e(TAG, "update state driver failed" + task.getException());
+                        }
+                    }
+                });
+    }
+
     private void sendRequestToDiver() {
         Log.d(TAG, "driver_id: " + driver.getId());
-        Log.d(TAG, "destination address: " + destinationAddress);
-        Log.d(TAG, "destination location" + destinationLocation);
         if (driver.getId() != null && destinationAddress != null & destinationLocation != null) {
             DatabaseReference tokenTable = FirebaseDatabase
                     .getInstance()
@@ -223,9 +313,7 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
                     public void onResponse(@NonNull Call<Result> call,
                                            @NonNull Response<Result> response) {
                         if (response.isSuccessful()) {
-                            Log.d(TAG, "CALL USER SUCCESS");
-                        } else {
-                            showSnackBar(getString(R.string.send_message_to_driver_error));
+                            Log.d(TAG, "CALL DRIVER SUCCESS");
                         }
                     }
 
@@ -270,6 +358,25 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
     private void showSnackBar(String message) {
         Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_LONG).show();
     }
+
+    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String message = intent.getStringExtra(MyFirebaseMessaging.MESSAGE_KEY);
+            switch (message) {
+                case MyFirebaseMessaging.CANCEL_TITLE: {
+                    break;
+                }
+                case MyFirebaseMessaging.ACCEPT_TITLE:
+                    break;
+                case MyFirebaseMessaging.DROP_OFF_TITLE:
+                    break;
+                case MyFirebaseMessaging.CANCEL_TRIP_TITLE: {
+                    break;
+                }
+            }
+        }
+    };
 
     @Override
     protected void onDestroy() {

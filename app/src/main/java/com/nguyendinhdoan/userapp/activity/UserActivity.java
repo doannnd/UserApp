@@ -97,6 +97,7 @@ import com.karumi.dexter.listener.PermissionGrantedResponse;
 import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 import com.karumi.dexter.listener.single.PermissionListener;
+import com.nguyendinhdoan.userapp.BuildConfig;
 import com.nguyendinhdoan.userapp.R;
 import com.nguyendinhdoan.userapp.adapter.DriverAdapter;
 import com.nguyendinhdoan.userapp.common.Common;
@@ -298,7 +299,6 @@ public class UserActivity extends AppCompatActivity
     }
 
     private void setupUI() {
-        setupBroadcastReceiver();
         setupLoading();
         setupToolbar();
         setupNavigationView();
@@ -307,11 +307,6 @@ public class UserActivity extends AppCompatActivity
         setupFirebase();
         setupLocation();
         initServices();
-    }
-
-    private void setupBroadcastReceiver() {
-        LocalBroadcastManager.getInstance(this).registerReceiver(
-                mMessageReceiver, new IntentFilter(MyFirebaseMessaging.MESSAGE_DRIVER_KEY));
     }
 
     private void initServices() {
@@ -706,6 +701,7 @@ public class UserActivity extends AppCompatActivity
             String directionURL = Common.directionURL(String.format(Locale.getDefault(), "%f,%f", Common.lastLocation.getLatitude(), Common.lastLocation.getLongitude()),
                     String.format(Locale.getDefault(), "%f,%f", destinationLocation.latitude, destinationLocation.longitude));
             Log.d(TAG, "direction url: " + directionURL);
+
 
             // show direction
             mServicesGoogle.getDirectionPath(directionURL)
@@ -1128,6 +1124,7 @@ public class UserActivity extends AppCompatActivity
     private void displayPlaceDetail(String mLocationAddress, String mDestinationAddress) {
         try {
             String userCallURL = Common.directionURL(mLocationAddress, mDestinationAddress);
+            Log.d(TAG, "user call url: " + userCallURL);
 
             mServicesGoogle.getDirectionPath(userCallURL)
                     .enqueue(new Callback<String>() {
@@ -1193,25 +1190,6 @@ public class UserActivity extends AppCompatActivity
         driverRecyclerView.setAdapter(adapter);
         adapter.notifyDataSetChanged();
     }
-
-    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String message = intent.getStringExtra(MyFirebaseMessaging.MESSAGE_KEY);
-            switch (message) {
-                case MyFirebaseMessaging.CANCEL_TITLE: {
-                    break;
-                }
-                case MyFirebaseMessaging.ACCEPT_TITLE:
-                    break;
-                case MyFirebaseMessaging.DROP_OFF_TITLE:
-                    break;
-                case MyFirebaseMessaging.CANCEL_TRIP_TITLE: {
-                    break;
-                }
-            }
-        }
-    };
 
    /*private void findDriver() {
         findGeoQuery = driverLocationGeoFire.queryAtLocation(

@@ -25,7 +25,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@android:color/transparent"
-            app:backgroundTint="@android:color/holo_green_dark" />
+            app:backgroundTint="@color/colorBackgroundCall"
+            app:elevation="16dp" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -55,13 +56,13 @@
                 android:id="@+id/distance_text_view"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:fontFamily="@font/amaranth"
                 android:drawableStart="@drawable/ic_distance"
                 android:drawablePadding="10dp"
+                android:fontFamily="@font/amaranth"
                 android:gravity="center_vertical"
-                android:text="3 km"
                 android:textColor="@android:color/black"
-                android:textSize="16sp" />
+                android:textSize="16sp"
+                tools:text="3 km" />
 
             <TextView
                 android:id="@+id/location_address_text_view"
@@ -71,9 +72,9 @@
                 android:drawablePadding="8dp"
                 android:fontFamily="@font/amaranth"
                 android:gravity="center_vertical"
-                android:text="current location"
                 android:textColor="@android:color/black"
-                android:textSize="16sp" />
+                android:textSize="16sp"
+                tools:text="current location" />
 
             <TextView
                 android:id="@+id/destination_address_text_view"
@@ -83,16 +84,17 @@
                 android:drawablePadding="8dp"
                 android:fontFamily="@font/amaranth"
                 android:gravity="center_vertical"
-                android:text="go location"
                 android:textColor="@android:color/black"
-                android:textSize="16sp" />
+                android:textSize="16sp"
+                tools:text="go location" />
 
-                <android.support.v7.widget.RecyclerView
-                    android:id="@+id/driver_recycler_view"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:clipToPadding="false"
-                    tools:listitem="@layout/recycler_view_item" />
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/driver_recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipToPadding="false"
+                tools:listitem="@layout/recycler_view_item" />
 
         </LinearLayout>
 
