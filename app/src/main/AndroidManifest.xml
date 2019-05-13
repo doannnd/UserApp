@@ -22,26 +22,23 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-        <!--
-             The API key for Google Maps-based APIs is defined as a string resource.
-             (See the file "res/values/google_maps_api.xml").
-             Note that the API key is linked to the encryption key used to sign the APK.
-             You need a different API key for each encryption key, including the release key that is used to
-             sign the APK for publishing.
-             You can define the keys for the debug and release targets in src/debug/ and src/release/.
-        -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" />
 
         <activity
             android:name=".activity.TrackingActivity"
-            android:label="@string/title_activity_tracking"></activity>
-        <activity android:name=".activity.CallActivity" />
+            android:label="@string/title_activity_tracking"
+            android:screenOrientation="portrait"/>
+
+        <activity android:name=".activity.CallActivity"
+            android:screenOrientation="portrait"/>
+
         <activity
             android:name=".activity.HistoryActivity"
             android:parentActivityName=".activity.UserActivity"
             android:screenOrientation="portrait" />
+
         <activity
             android:name=".activity.SplashActivity"
             android:screenOrientation="portrait"
@@ -64,6 +61,7 @@
             android:label="@string/title_activity_user"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
+
         <activity
             android:name="com.theartofdev.edmodo.cropper.CropImageActivity"
             android:theme="@style/Base.Theme.AppCompat" />
@@ -73,6 +71,7 @@
                 <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
             </intent-filter>
         </service>
+
         <service android:name=".services.MyFirebaseMessaging">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />

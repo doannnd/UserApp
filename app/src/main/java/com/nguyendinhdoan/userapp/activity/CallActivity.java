@@ -17,6 +17,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -53,6 +54,7 @@ import com.nguyendinhdoan.userapp.services.MyFirebaseMessaging;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -65,7 +67,7 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
     private static final String STATE_KEY = "state";
     private static final String NOTIFICATION_KEY = "cancel";
     public static final String MESSAGE_CANCEL_KEY = "MESSAGE_CANCEL_KEY";
-    public static final String MESSAGE_ACCEPT_KEY = "MESSAGE_CANCEL_KEY";
+    public static final String MESSAGE_ACCEPT_KEY = "MESSAGE_ACCEPT_KEY";
 
     private TextView pickUpAddressTextView;
     private TextView dropOfAddressTextView;
@@ -148,9 +150,7 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
             String locationAddress = getIntent().getStringExtra(DriverAdapter.LOCATION_ADDRESS_KEY);
             destinationAddress = getIntent().getStringExtra(DriverAdapter.DESTINATION_ADDRESS_KEY);
             int tripPrice = getIntent().getIntExtra(DriverAdapter.PRICE_KEY, 0);
-
-            Bundle bundle = getIntent().getParcelableExtra(DriverAdapter.DESTINATION_LOCATION_BUNDLE);
-            destinationLocation = bundle.getParcelable(DriverAdapter.DESTINATION_LOCATION_KEY);
+            destinationLocation = Objects.requireNonNull(getIntent().getExtras()).getParcelable(DriverAdapter.DESTINATION_LOCATION_KEY);
 
             // update ui
             pickUpAddressTextView.setText(locationAddress);
@@ -249,7 +249,6 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void sendRequestToDiver() {
-        Log.d(TAG, "driver_id: " + driver.getId());
         if (driver.getId() != null && destinationAddress != null & destinationLocation != null) {
             DatabaseReference tokenTable = FirebaseDatabase
                     .getInstance()
@@ -357,6 +356,9 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        LocalBroadcastManager
+                .getInstance(this)
+                .unregisterReceiver(mMessageReceiver);
     }
 
 

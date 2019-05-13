@@ -75,14 +75,11 @@ public class DriverAdapter extends RecyclerView.Adapter<DriverAdapter.ViewHolder
             @Override
             public void onClick(View v) {
                 Intent intentCall = new Intent(context, CallActivity.class);
-                Bundle bundle = new Bundle();
-                bundle.putParcelable(DESTINATION_LOCATION_KEY, destinationLocation);
-
                 intentCall.putExtra(CALL_DRIVER_KEY, driver);
                 intentCall.putExtra(LOCATION_ADDRESS_KEY, locationAddress);
                 intentCall.putExtra(DESTINATION_ADDRESS_KEY, destinationAddress);
                 intentCall.putExtra(PRICE_KEY, priceFormat);
-                intentCall.putExtra(DESTINATION_LOCATION_BUNDLE, bundle);
+                intentCall.putExtra(DESTINATION_LOCATION_KEY, destinationLocation);
                 context.startActivity(intentCall);
             }
         });

@@ -212,4 +212,6 @@ public class Driver implements Parcelable{
     public int hashCode() {
         return Objects.hash(getId(), getName(), getEmail(), getPhone(), getAvatarUrl(), getRates(), getState(), getLicensePlates(), getVehicleName(), getZeroToTwo(), getThreeToTen(), getElevenToTwenty(), getBiggerTwenty());
     }
+
+    
 }

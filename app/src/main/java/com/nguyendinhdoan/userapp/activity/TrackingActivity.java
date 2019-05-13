@@ -12,9 +12,9 @@ import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -37,9 +37,13 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.MultiplePermissionsReport;
 import com.karumi.dexter.PermissionToken;
@@ -51,7 +55,13 @@ import com.karumi.dexter.listener.single.PermissionListener;
 import com.nguyendinhdoan.userapp.R;
 import com.nguyendinhdoan.userapp.common.Common;
 import com.nguyendinhdoan.userapp.model.Driver;
+import com.nguyendinhdoan.userapp.model.Notification;
+import com.nguyendinhdoan.userapp.model.Result;
+import com.nguyendinhdoan.userapp.model.Sender;
+import com.nguyendinhdoan.userapp.model.Token;
+import com.nguyendinhdoan.userapp.remote.IFirebaseMessagingAPI;
 import com.nguyendinhdoan.userapp.remote.IGoogleAPI;
+import com.nguyendinhdoan.userapp.services.MyFirebaseIdServices;
 import com.nguyendinhdoan.userapp.services.MyFirebaseMessaging;
 import com.nguyendinhdoan.userapp.widget.AcceptDialogFragment;
 
@@ -59,15 +69,17 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class TrackingActivity extends FragmentActivity implements OnMapReadyCallback, View.OnClickListener {
+public class TrackingActivity extends AppCompatActivity implements OnMapReadyCallback, View.OnClickListener {
 
     private static final String TAG = "TrackingActivity";
     private static final float TRACKING_MAP_ZOOM = 15.0F;
@@ -86,6 +98,9 @@ public class TrackingActivity extends FragmentActivity implements OnMapReadyCall
     private static final String DIRECTION_TEXT_KEY = "text";
     public static final int ROUTES_INDEX = 0;
     public static final int LEGS_INDEX = 0;
+    private static final String NOTIFICATION_KEY = "cancelTrip";
+    private static final String DRIVER_TABLE_NAME = "drivers";
+    private static final String STATE_KEY = "state";
 
     private TextView timeTextView;
     private TextView introTextView;
@@ -106,7 +121,7 @@ public class TrackingActivity extends FragmentActivity implements OnMapReadyCall
     private Driver driver;
 
     public static Intent start(Context context) {
-        return new Intent(context, CallActivity.class);
+        return new Intent(context, TrackingActivity.class);
     }
 
     @Override
@@ -208,6 +223,21 @@ public class TrackingActivity extends FragmentActivity implements OnMapReadyCall
 
     private void displayCurrentLocation() {
         if (Common.lastLocation != null) {
+
+            DatabaseReference driverLocationTable = FirebaseDatabase.getInstance().getReference(DRIVER_LOCATION_TABLE_NAME);
+            driverLocationTable.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    // reload if change driver location : offline or online of driver
+                    displayDriverLocation();
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+                    Log.e(TAG, "onCancelled: error in reload all available driver " + databaseError);
+                }
+            });
+
             final double userLatitude = Common.lastLocation.getLatitude();
             final double userLongitude = Common.lastLocation.getLongitude();
 
@@ -233,6 +263,9 @@ public class TrackingActivity extends FragmentActivity implements OnMapReadyCall
     }
 
     private void displayDriverLocation() {
+
+        trackingMap.clear();
+
         if (driver != null) {
             DatabaseReference driverLocationTable = FirebaseDatabase.getInstance().getReference(DRIVER_LOCATION_TABLE_NAME);
             GeoFire driverLocationGeoFire = new GeoFire(driverLocationTable);
@@ -313,7 +346,7 @@ public class TrackingActivity extends FragmentActivity implements OnMapReadyCall
             licensePlatesTextView.setText(driver.getLicensePlates());
             vehicleNameTextView.setText(driver.getVehicleName());
             nameTextView.setText(driver.getName());
-            starTextView.setText(driver.getState());
+            starTextView.setText(driver.getRates());
         }
     }
 
@@ -384,7 +417,82 @@ public class TrackingActivity extends FragmentActivity implements OnMapReadyCall
     }
 
     private void handleUserCancelTrip() {
-        
+        sendMessageToDriver();
+    }
+
+    private void sendMessageToDriver() {
+        if (driver != null) {
+            DatabaseReference tokenTable = FirebaseDatabase
+                    .getInstance().getReference(MyFirebaseIdServices.TOKEN_TABLE_NAME);
+
+            tokenTable.orderByKey().equalTo(driver.getId())
+                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
+                                Token token = postSnapshot.getValue(Token.class);
+                                if (token != null) {
+                                    String bodyMessage = getString(R.string.message_user_cancel_booking);
+                                    Notification notification = new Notification(NOTIFICATION_KEY, bodyMessage);
+
+                                    Sender sender = new Sender(notification, token.getToken());
+                                    handleSendMessage(sender);
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+                            Log.e(TAG, "onCancelled: error" + databaseError);
+                        }
+                    });
+        }
+    }
+
+    private void handleSendMessage(Sender sender) {
+        IFirebaseMessagingAPI mService = Common.getFirebaseMessagingAPI();
+        mService.sendMessage(sender)
+                .enqueue(new Callback<Result>() {
+                    @Override
+                    public void onResponse(@NonNull Call<Result> call, @NonNull Response<Result> response) {
+                        if (response.isSuccessful()) {
+                            updateStateDriver();
+                            launchUserActivity();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(@NonNull Call<Result> call, @NonNull Throwable t) {
+                        Log.e(TAG, "onFailure: error" + t.getMessage());
+                    }
+                });
+    }
+
+    private void launchUserActivity() {
+        Intent intentUser = UserActivity.start(this);
+        intentUser.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intentUser);
+        finish();
+    }
+
+    private void updateStateDriver() {
+        Map<String, Object> driverUpdateState = new HashMap<>();
+        String stateValue = getString(R.string.state_not_working);
+        driverUpdateState.put(STATE_KEY, stateValue);
+
+        DatabaseReference driverTable = FirebaseDatabase.getInstance().getReference(DRIVER_TABLE_NAME);
+        driverTable.child(driver.getId())
+                .updateChildren(driverUpdateState)
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            Log.d(TAG, "update state driver success");
+                        } else {
+                            Log.e(TAG, "update state driver failed" + task.getException());
+                        }
+                    }
+                });
     }
 
     private void callPhoneToDriver() {
@@ -426,7 +534,7 @@ public class TrackingActivity extends FragmentActivity implements OnMapReadyCall
         public void onReceive(Context context, Intent intent) {
             String message = intent.getStringExtra(MyFirebaseMessaging.MESSAGE_KEY);
             switch (message) {
-                case MyFirebaseMessaging.ACCEPT_TITLE: {
+                case MyFirebaseMessaging.ARRIVED_TITLE: {
                     introTextView.setText(getString(R.string.driver_has_arrived));
                     break;
                 }
@@ -445,6 +553,9 @@ public class TrackingActivity extends FragmentActivity implements OnMapReadyCall
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        LocalBroadcastManager
+                .getInstance(this)
+                .unregisterReceiver(mMessageReceiver);
         stopLocationUpdates();
         trackingMap.clear();
     }
