@@ -33,6 +33,7 @@ public class MyFirebaseMessaging extends FirebaseMessagingService {
     public static final String CANCEL_TRIP_TITLE = "cancelTrip";
     private static final int PENDING_REQUEST_CODE = 0;
     private static final int NOTIFY_ID = 1;
+    public static final String MESSAGE_DRIVER_TRACKING_KEY = "MESSAGE_DRIVER_TRACKING_KEY";
 
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
@@ -43,19 +44,23 @@ public class MyFirebaseMessaging extends FirebaseMessagingService {
             String body = remoteMessage.getNotification().getBody();
             switch (Objects.requireNonNull(title)) {
                 case CANCEL_TITLE:
-                    sendMessage(title);
+                    sendMessageToCallActivity(title);
                     notification(title, body);
                     break;
                 case ACCEPT_TITLE:
+                    sendMessageToCallActivity(title);
                     notification(title, body);
                     break;
                 case ARRIVED_TITLE:
+                    sendMessageToTrackingActivity(title);
                     notification(title, body);
                     break;
                 case DROP_OFF_TITLE:
+                    sendMessageToTrackingActivity(title);
                     notification(title, body);
                     break;
                 case CANCEL_TRIP_TITLE:
+                    sendMessageToTrackingActivity(title);
                     notification(title, body);
                     break;
             }
@@ -71,15 +76,14 @@ public class MyFirebaseMessaging extends FirebaseMessagingService {
         }
     }
 
-    private void sendMessageCancelToUserActivity(String message, String body) {
+    private void sendMessageToCallActivity(String message) {
         Intent intent = new Intent(MESSAGE_DRIVER_KEY);
         intent.putExtra(MESSAGE_KEY, message);
-        intent.putExtra(BODY_KEY, body);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
-    private void sendMessage(String message) {
-        Intent intent = new Intent(MESSAGE_DRIVER_KEY);
+    private void sendMessageToTrackingActivity(String message) {
+        Intent intent = new Intent(MESSAGE_DRIVER_TRACKING_KEY);
         intent.putExtra(MESSAGE_KEY, message);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }

@@ -172,17 +172,8 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.cancel_button: {
-                handleCancelBooking();
-                break;
-            }
-            case R.id.phone_text_view: {
-                if (driver.getPhone() != null) {
-                    callPhoneToDriver();
-                }
-                break;
-            }
+        if (v.getId() == R.id.cancel_button) {
+            handleCancelBooking();
         }
     }
 
@@ -327,36 +318,6 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
                 });
     }
 
-    private void callPhoneToDriver() {
-        Dexter.withActivity(this)
-                .withPermission(Manifest.permission.CALL_PHONE)
-                .withListener(new PermissionListener() {
-                    @Override
-                    public void onPermissionGranted(PermissionGrantedResponse response) {
-                        if (ActivityCompat.checkSelfPermission(
-                                CallActivity.this, Manifest.permission.CALL_PHONE)
-                                != PackageManager.PERMISSION_GRANTED) {
-                            return;
-                        }
-                        Intent intentCall = new Intent(Intent.ACTION_CALL);
-                        intentCall.setData(Uri.parse("tel:" + driver.getPhone()));
-                        startActivity(intentCall);
-                    }
-
-                    @Override
-                    public void onPermissionDenied(PermissionDeniedResponse response) {
-                        showSnackBar(getString(R.string.permission_denied));
-                    }
-
-                    @Override
-                    public void onPermissionRationaleShouldBeShown(
-                            PermissionRequest permission,
-                            PermissionToken token) {
-                        token.continuePermissionRequest();
-                    }
-                }).check();
-    }
-
     private void showSnackBar(String message) {
         Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_LONG).show();
     }
@@ -373,11 +334,6 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
                 case MyFirebaseMessaging.ACCEPT_TITLE:
                     handleDriverAcceptBooking();
                     break;
-                case MyFirebaseMessaging.DROP_OFF_TITLE:
-                    break;
-                case MyFirebaseMessaging.CANCEL_TRIP_TITLE: {
-                    break;
-                }
             }
         }
     };

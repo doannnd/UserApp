@@ -111,5 +111,6 @@
     <string name="title_activity_tracking">Map</string>
     <string name="the_driver_is_on_his_way_to_pick_you_up">The driver is on his way to pick you up</string>
     <string name="icon_phone">icon phone</string>
+    <string name="driver_has_arrived">the driver has arrived</string>
 
 </resources>
