@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <fragment
+        android:id="@+id/map"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".activity.TrackingActivity" />
+
+    <android.support.v4.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/white"
+        app:behavior_hideable="false"
+        app:behavior_peekHeight="180dp"
+        app:layout_behavior="android.support.design.widget.BottomSheetBehavior">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <View
+                android:layout_width="50dp"
+                android:layout_height="3dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_scroll"/>
+
+            <TextView
+                android:id="@+id/time_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                tools:text="1 minute"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:textColor="@android:color/holo_green_dark"/>
+
+            <TextView
+                android:id="@+id/intro_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/the_driver_is_on_his_way_to_pick_you_up"
+                android:textColor="@android:color/black"/>
+            
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="17H3-9992"
+                    android:textSize="12sp"/>
+
+                <View
+                    android:layout_width="5dp"
+                    android:layout_height="5dp"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/bg_scroll"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="Kia Morning"
+                    android:textSize="12sp"/>
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:layout_marginTop="4dp"
+                android:background="@android:color/darker_gray" />
+
+            <android.support.constraint.ConstraintLayout
+                android:id="@+id/root_item"
+                android:padding="8dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <de.hdodenhof.circleimageview.CircleImageView
+                    android:id="@+id/avatar_image_view"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    tools:src="@tools:sample/avatars"
+                    app:layout_constraintStart_toStartOf="parent"
+                    android:layout_marginStart="8dp"
+                    app:layout_constraintTop_toTopOf="parent"
+                    android:layout_marginTop="8dp" />
+
+                <TextView
+                    android:id="@+id/name_text_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/amaranth"
+                    tools:text="@tools:sample/full_names"
+                    android:textSize="20sp"
+                    android:textColor="@android:color/black"
+                    app:layout_constraintTop_toTopOf="@+id/avatar_image_view"
+                    app:layout_constraintStart_toEndOf="@+id/avatar_image_view"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginBottom="8dp"
+                    app:layout_constraintBottom_toTopOf="@+id/vehicle_name_text_view" />
+
+                <TextView
+                    android:id="@+id/vehicle_name_text_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="20dp"
+                    android:drawableEnd="@drawable/ic_star"
+                    tools:text="5"
+                    app:layout_constraintBottom_toBottomOf="@+id/avatar_image_view"
+                    app:layout_constraintStart_toEndOf="@+id/avatar_image_view"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="8dp"
+                    app:layout_constraintHorizontal_bias="0.050" />
+
+                <ImageView
+                    android:id="@+id/price_text_view"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="8dp"
+                    android:scaleType="fitCenter"
+                    android:contentDescription="@string/icon_phone"
+                    android:src="@drawable/ic_phone_48"
+                    app:layout_constraintTop_toTopOf="@+id/avatar_image_view"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintBottom_toBottomOf="@id/avatar_image_view"/>
+
+            </android.support.constraint.ConstraintLayout>
+
+            <Button
+                android:id="@+id/cancel_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                android:background="@drawable/bg_button_call"
+                android:text="@string/cancel_button_text"
+                android:textAllCaps="false"
+                android:textColor="@android:color/white"
+                android:textSize="20sp"/>
+
+        </LinearLayout>
+
+    </android.support.v4.widget.NestedScrollView>
+
+</android.support.design.widget.CoordinatorLayout>

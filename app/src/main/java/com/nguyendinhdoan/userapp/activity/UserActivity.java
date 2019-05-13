@@ -219,15 +219,9 @@ public class UserActivity extends AppCompatActivity
     private IGoogleAPI mServicesGoogle;
     private List<Driver> driverList;
     private String km;
-    private  String destinationAddress;
-    private  String locationAddress;
+    private String destinationAddress;
+    private String locationAddress;
 
-
-    private void showAlertDialog() {
-        FragmentManager fm = getSupportFragmentManager();
-        CancelDialogFragment alertDialog = CancelDialogFragment.newInstance("Cancel Trip", "The driver has canceled the trip for some reason, please find another driver");
-        alertDialog.show(fm, "fragment_alert");
-    }
 
     private void showDialog() {
         new AppRatingDialog.Builder()
@@ -268,7 +262,6 @@ public class UserActivity extends AppCompatActivity
         initViews();
         setupUI();
         addEvents();
-
     }
 
     private void setupLoading() {
@@ -307,6 +300,22 @@ public class UserActivity extends AppCompatActivity
         setupFirebase();
         setupLocation();
         initServices();
+        handleDriverCancelBooking();
+    }
+
+    private void handleDriverCancelBooking() {
+        if (getIntent() != null) {
+            String message = getIntent().getStringExtra(CallActivity.MESSAGE_CANCEL_KEY);
+            if (message != null) {
+                showCancelDialog();
+            }
+        }
+    }
+
+    private void showCancelDialog() {
+        FragmentManager fm = getSupportFragmentManager();
+        CancelDialogFragment cancelDialog = CancelDialogFragment.newInstance();
+        cancelDialog.show(fm, cancelDialog.getTag());
     }
 
     private void initServices() {
@@ -314,12 +323,14 @@ public class UserActivity extends AppCompatActivity
     }
 
     private void setupFirebase() {
-        DatabaseReference pickupRequest = FirebaseDatabase.getInstance().getReference(PICKUP_REQUEST_TABLE_NAME);
+        DatabaseReference pickupRequest = FirebaseDatabase
+                .getInstance().getReference(PICKUP_REQUEST_TABLE_NAME);
         pickupRequestGeoFire = new GeoFire(pickupRequest);
         userAuth = FirebaseAuth.getInstance();
 
         // driver location
-        DatabaseReference driverLocation = FirebaseDatabase.getInstance().getReference(DRIVER_LOCATION_TABLE_NAME);
+        DatabaseReference driverLocation = FirebaseDatabase
+                .getInstance().getReference(DRIVER_LOCATION_TABLE_NAME);
         driverLocationGeoFire = new GeoFire(driverLocation);
 
         // storage

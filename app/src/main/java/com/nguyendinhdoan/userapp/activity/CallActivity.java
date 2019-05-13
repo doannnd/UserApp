@@ -64,6 +64,8 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
     private static final String DRIVER_TABLE_NAME = "drivers";
     private static final String STATE_KEY = "state";
     private static final String NOTIFICATION_KEY = "cancel";
+    public static final String MESSAGE_CANCEL_KEY = "MESSAGE_CANCEL_KEY";
+    public static final String MESSAGE_ACCEPT_KEY = "MESSAGE_CANCEL_KEY";
 
     private TextView pickUpAddressTextView;
     private TextView dropOfAddressTextView;
@@ -202,7 +204,7 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
                                 if (token != null) {
                                     String bodyMessage = getString(R.string.message_user_cancel_booking);
                                     Notification notification = new Notification(NOTIFICATION_KEY, bodyMessage);
-                              
+
                                     Sender sender = new Sender(notification, token.getToken());
                                     handleSendMessage(sender);
                                 }
@@ -365,9 +367,11 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
             String message = intent.getStringExtra(MyFirebaseMessaging.MESSAGE_KEY);
             switch (message) {
                 case MyFirebaseMessaging.CANCEL_TITLE: {
+                    handleDriverCancelBooking();
                     break;
                 }
                 case MyFirebaseMessaging.ACCEPT_TITLE:
+                    handleDriverAcceptBooking();
                     break;
                 case MyFirebaseMessaging.DROP_OFF_TITLE:
                     break;
@@ -377,6 +381,22 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
     };
+
+    private void handleDriverAcceptBooking() {
+        Intent intentTracking = TrackingActivity.start(CallActivity.this);
+        intentTracking.putExtra(MESSAGE_ACCEPT_KEY, driver);
+        intentTracking.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intentTracking);
+        finish();
+    }
+
+    private void handleDriverCancelBooking() {
+        Intent intentUser = UserActivity.start(CallActivity.this);
+        intentUser.putExtra(MESSAGE_CANCEL_KEY, "cancel");
+        intentUser.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intentUser);
+        finish();
+    }
 
     @Override
     protected void onDestroy() {
