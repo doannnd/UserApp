@@ -114,5 +114,6 @@
     <string name="driver_has_arrived">the driver has arrived</string>
     <string name="icon_tick">icon tick</string>
     <string name="yeah_the_driver_has_accepted_your_request">Yeah! The driver has accepted your request</string>
+    <string name="cancel_trip_message">The driver has canceled the trip for some reason, please find another driver</string>
 
 </resources>

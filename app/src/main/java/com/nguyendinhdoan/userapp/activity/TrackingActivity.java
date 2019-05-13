@@ -101,6 +101,7 @@ public class TrackingActivity extends AppCompatActivity implements OnMapReadyCal
     private static final String NOTIFICATION_KEY = "cancelTrip";
     private static final String DRIVER_TABLE_NAME = "drivers";
     private static final String STATE_KEY = "state";
+    public static final String DRIVER_CANCEL_TRI_KEY = "DRIVER_CANCEL_TRI_KEY";
 
     private TextView timeTextView;
     private TextView introTextView;
@@ -539,7 +540,11 @@ public class TrackingActivity extends AppCompatActivity implements OnMapReadyCal
                     break;
                 }
                 case MyFirebaseMessaging.CANCEL_TRIP_TITLE: {
-
+                    Intent intentCancel = UserActivity.start(TrackingActivity.this);
+                    intentCancel.putExtra(DRIVER_CANCEL_TRI_KEY, getString(R.string.cancel_trip_message));
+                    intentCancel.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intentCancel);
+                    finish();
                     break;
                 }
                 case MyFirebaseMessaging.DROP_OFF_TITLE: {

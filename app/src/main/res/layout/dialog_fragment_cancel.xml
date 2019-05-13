@@ -3,6 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     app:cardCornerRadius="3dp"
     app:cardBackgroundColor="@color/colorWhite"
     app:cardUseCompatPadding="true"
@@ -16,11 +17,12 @@
         android:padding="16dp">
 
         <TextView
+            android:id="@+id/message_cancel_text_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center"
             android:fontFamily="@font/amaranth"
-            android:text="@string/sorry_the_driver_declined_your_request"
+            tools:text="@string/sorry_the_driver_declined_your_request"
             android:textColor="@android:color/black"
             android:textSize="25sp"/>
 

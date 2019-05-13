@@ -347,7 +347,7 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
 
     private void handleDriverCancelBooking() {
         Intent intentUser = UserActivity.start(this);
-        intentUser.putExtra(MESSAGE_CANCEL_KEY, "cancel");
+        intentUser.putExtra(MESSAGE_CANCEL_KEY, getString(R.string.sorry_the_driver_declined_your_request));
         intentUser.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intentUser);
         finish();

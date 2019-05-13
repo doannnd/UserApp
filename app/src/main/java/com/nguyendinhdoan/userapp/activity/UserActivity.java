@@ -4,11 +4,9 @@ import android.Manifest;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.Uri;
@@ -23,7 +21,6 @@ import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputEditText;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -97,14 +94,12 @@ import com.karumi.dexter.listener.PermissionGrantedResponse;
 import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 import com.karumi.dexter.listener.single.PermissionListener;
-import com.nguyendinhdoan.userapp.BuildConfig;
 import com.nguyendinhdoan.userapp.R;
 import com.nguyendinhdoan.userapp.adapter.DriverAdapter;
 import com.nguyendinhdoan.userapp.common.Common;
 import com.nguyendinhdoan.userapp.model.Driver;
 import com.nguyendinhdoan.userapp.model.User;
 import com.nguyendinhdoan.userapp.remote.IGoogleAPI;
-import com.nguyendinhdoan.userapp.services.MyFirebaseMessaging;
 import com.nguyendinhdoan.userapp.utils.CommonUtils;
 import com.nguyendinhdoan.userapp.widget.CancelDialogFragment;
 import com.stepstone.apprating.AppRatingDialog;
@@ -305,16 +300,19 @@ public class UserActivity extends AppCompatActivity
 
     private void handleDriverCancelBooking() {
         if (getIntent() != null) {
-            String message = getIntent().getStringExtra(CallActivity.MESSAGE_CANCEL_KEY);
-            if (message != null) {
-                showCancelDialog();
+            String messageCancel = getIntent().getStringExtra(CallActivity.MESSAGE_CANCEL_KEY);
+            String messageCancelTrip = getIntent().getStringExtra(TrackingActivity.DRIVER_CANCEL_TRI_KEY);
+            if (messageCancel != null) {
+                showCancelDialog(messageCancel);
+            } else if (messageCancelTrip != null) {
+                showCancelDialog(messageCancelTrip);
             }
         }
     }
 
-    private void showCancelDialog() {
+    private void showCancelDialog(String message) {
         FragmentManager fm = getSupportFragmentManager();
-        CancelDialogFragment cancelDialog = CancelDialogFragment.newInstance();
+        CancelDialogFragment cancelDialog = CancelDialogFragment.newInstance(message);
         cancelDialog.show(fm, cancelDialog.getTag());
     }
 
