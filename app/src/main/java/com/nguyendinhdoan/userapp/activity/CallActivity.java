@@ -339,7 +339,7 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
     };
 
     private void handleDriverAcceptBooking() {
-        Intent intentTracking = TrackingActivity.start(CallActivity.this);
+        Intent intentTracking = TrackingActivity.start(this);
         intentTracking.putExtra(MESSAGE_ACCEPT_KEY, driver);
         intentTracking.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intentTracking);
@@ -347,7 +347,7 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void handleDriverCancelBooking() {
-        Intent intentUser = UserActivity.start(CallActivity.this);
+        Intent intentUser = UserActivity.start(this);
         intentUser.putExtra(MESSAGE_CANCEL_KEY, "cancel");
         intentUser.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intentUser);

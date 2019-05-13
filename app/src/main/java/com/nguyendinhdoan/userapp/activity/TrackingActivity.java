@@ -7,12 +7,13 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
-import android.os.Bundle;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
@@ -52,6 +53,7 @@ import com.nguyendinhdoan.userapp.common.Common;
 import com.nguyendinhdoan.userapp.model.Driver;
 import com.nguyendinhdoan.userapp.remote.IGoogleAPI;
 import com.nguyendinhdoan.userapp.services.MyFirebaseMessaging;
+import com.nguyendinhdoan.userapp.widget.AcceptDialogFragment;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -318,7 +320,16 @@ public class TrackingActivity extends FragmentActivity implements OnMapReadyCall
     private void getDataDriver() {
         if (getIntent() != null) {
             driver = getIntent().getParcelableExtra(CallActivity.MESSAGE_ACCEPT_KEY);
+            if (driver != null) {
+                showAcceptDialog();
+            }
         }
+    }
+
+    private void showAcceptDialog() {
+        FragmentManager fm = getSupportFragmentManager();
+        AcceptDialogFragment acceptDialog = AcceptDialogFragment.newInstance();
+        acceptDialog.show(fm, acceptDialog.getTag());
     }
 
     private void initViews() {
@@ -360,6 +371,7 @@ public class TrackingActivity extends FragmentActivity implements OnMapReadyCall
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.cancel_button: {
+                handleUserCancelTrip();
                 break;
             }
             case R.id.phone_image_view: {
@@ -369,6 +381,10 @@ public class TrackingActivity extends FragmentActivity implements OnMapReadyCall
                 break;
             }
         }
+    }
+
+    private void handleUserCancelTrip() {
+        
     }
 
     private void callPhoneToDriver() {

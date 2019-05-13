@@ -106,11 +106,13 @@
     <string name="request_text">The system is processing your request</string>
     <string name="state_not_working">not_working</string>
     <string name="message_user_cancel_booking">User cancel booking</string>
-    <string name="sorry_the_driver_declined_your_request">Sorry, the driver declined your request</string>
+    <string name="sorry_the_driver_declined_your_request">Sorry! the driver declined your request</string>
     <string name="icon_cry">icon cry</string>
     <string name="title_activity_tracking">Map</string>
     <string name="the_driver_is_on_his_way_to_pick_you_up">The driver is on his way to pick you up</string>
     <string name="icon_phone">icon phone</string>
     <string name="driver_has_arrived">the driver has arrived</string>
+    <string name="icon_tick">icon tick</string>
+    <string name="yeah_the_driver_has_accepted_your_request">Yeah! The driver has accepted your request</string>
 
 </resources>
