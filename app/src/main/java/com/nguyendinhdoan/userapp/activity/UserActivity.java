@@ -163,6 +163,11 @@ public class UserActivity extends AppCompatActivity
     private static final String DIRECTION_ADDRESS_KEY = "end_address";
     private static final String DIRECTION_TEXT_KEY = "text";
     private static final String START_ADDRESS_KEY = "start_address";
+    public static final int LEFT = 0;
+    public static final int TOP = 0;
+    public static final int RIGHT = 30;
+    public static final int BOTTOM = 150;
+    public static final int SUBJECT = 0;
 
     private Toolbar toolbar;
     private DrawerLayout drawerLayout;
@@ -317,11 +322,12 @@ public class UserActivity extends AppCompatActivity
             supportMapFragment.getMapAsync(this);
 
             // add my button location in bottom right
-            View locationButton = ((View) Objects.requireNonNull(supportMapFragment.getView()).findViewById(Integer.parseInt("1")).getParent()).findViewById(Integer.parseInt("2"));
+            View locationButton = ((View) Objects.requireNonNull(supportMapFragment.getView())
+                    .findViewById(Integer.parseInt("1")).getParent()).findViewById(Integer.parseInt("2"));
             RelativeLayout.LayoutParams rlp = (RelativeLayout.LayoutParams) locationButton.getLayoutParams();
-            rlp.addRule(RelativeLayout.ALIGN_PARENT_TOP, 0);
+            rlp.addRule(RelativeLayout.ALIGN_PARENT_TOP, SUBJECT);
             rlp.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
-            rlp.setMargins(0, 0, 30, 150);
+            rlp.setMargins(LEFT, TOP, RIGHT, BOTTOM);
         }
     }
 
@@ -338,7 +344,6 @@ public class UserActivity extends AppCompatActivity
         View headerView = navigationView.getHeaderView(0);
         final TextView nameTextView = headerView.findViewById(R.id.name_text_view);
         final TextView emailTextView = headerView.findViewById(R.id.email_text_view);
-        final TextView starTextView = headerView.findViewById(R.id.star_text_view);
         final CircleImageView avatarImageView = headerView.findViewById(R.id.avatar_image_view);
 
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
@@ -357,7 +362,6 @@ public class UserActivity extends AppCompatActivity
                     if (Common.currentUser != null) {
                         nameTextView.setText(Common.currentUser.getName());
                         emailTextView.setText(Common.currentUser.getEmail());
-                        starTextView.setText(Common.currentUser.getRates());
                         Glide.with(UserActivity.this).load(Common.currentUser.getAvatarUrl())
                                 .placeholder(R.drawable.ic_profile)
                                 .into(avatarImageView);
@@ -434,10 +438,6 @@ public class UserActivity extends AppCompatActivity
         nameEditText = view.findViewById(R.id.name_edit_text);
         phoneEditText = view.findViewById(R.id.phone_edit_text);
         uploadImageView = view.findViewById(R.id.upload_image_view);
-
-       /* layoutEmail = view.findViewById(R.id.layout_email_profile);
-        layoutName = view.findViewById(R.id.layout_name_profile);
-        layoutPhone = view.findViewById(R.id.layout_phone_profile);*/
 
         // display information of driver ==> ui
         emailEditText.setText(Common.currentUser.getEmail());
@@ -839,8 +839,10 @@ public class UserActivity extends AppCompatActivity
                             buildLocationRequest();
                             buildLocationCallback();
                             // update location
-                            if (ActivityCompat.checkSelfPermission(UserActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                                    && ActivityCompat.checkSelfPermission(UserActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                            if (ActivityCompat.checkSelfPermission(UserActivity.this,
+                                    Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                                    && ActivityCompat.checkSelfPermission(UserActivity.this,
+                                    Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                                 return;
                             }
 
@@ -878,7 +880,8 @@ public class UserActivity extends AppCompatActivity
 
     private void displayCurrentLocation() {
 
-        DatabaseReference driverLocationTable = FirebaseDatabase.getInstance().getReference(DRIVER_LOCATION_TABLE_NAME);
+        DatabaseReference driverLocationTable = FirebaseDatabase.getInstance()
+                .getReference(DRIVER_LOCATION_TABLE_NAME);
         driverLocationTable.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -895,8 +898,10 @@ public class UserActivity extends AppCompatActivity
         double userLatitude = Common.lastLocation.getLatitude();
         double userLongitude = Common.lastLocation.getLongitude();
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
             return;
         }
 
@@ -1031,7 +1036,8 @@ public class UserActivity extends AppCompatActivity
     }
 
     private void showSnackBar(String message) {
-        Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_LONG);
+        Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content),
+                message, Snackbar.LENGTH_LONG);
         snackbar.show();
     }
 
@@ -1083,8 +1089,10 @@ public class UserActivity extends AppCompatActivity
             driverBottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
 
             displayPlaceDetail(
-                    String.format(Locale.getDefault(), "%f,%f", Common.lastLocation.getLatitude(), Common.lastLocation.getLongitude()),
-                    String.format(Locale.getDefault(), "%f,%f", destinationLocation.latitude, destinationLocation.longitude)
+                    String.format(Locale.getDefault(), "%f,%f", Common.lastLocation.getLatitude(),
+                            Common.lastLocation.getLongitude()),
+                    String.format(Locale.getDefault(), "%f,%f", destinationLocation.latitude,
+                            destinationLocation.longitude)
             );
         } else {
             showSnackBar(getString(R.string.please_enter_destination_address));
@@ -1107,13 +1115,6 @@ public class UserActivity extends AppCompatActivity
                                 JSONArray legs = routeObject.getJSONArray(DIRECTION_LEGS_KEY);
                                 JSONObject legObject = legs.getJSONObject(0);
 
-                               /* // get time and display on time text view
-                                JSONObject time = legObject.getJSONObject(DIRECTION_DURATION_KEY);
-                                String minutes = time.getString(DIRECTION_TEXT_KEY);
-                                Log.d(TAG, "minutes: " + time.getString(DIRECTION_TEXT_KEY));
-
-                                int timeFormatted = Integer.parseInt(minutes.replaceAll("\\D+", ""));*/
-
                                 // get distance and display on distance text view
                                 JSONObject distance = legObject.getJSONObject(DIRECTION_DISTANCE_KEY);
                                 km = distance.getString(DIRECTION_TEXT_KEY);
@@ -1133,7 +1134,8 @@ public class UserActivity extends AppCompatActivity
                                 distanceTextView.setText(km);
 
                                 if (driverList != null) {
-                                    loadAllDriverToRecyclerView(driverList, km, locationAddress, destinationAddress, destinationLocation);
+                                    loadAllDriverToRecyclerView(driverList, km, locationAddress,
+                                            destinationAddress, destinationLocation);
                                 }
 
                             } catch (JSONException e) {
@@ -1152,11 +1154,13 @@ public class UserActivity extends AppCompatActivity
     }
 
     private void loadAllDriverToRecyclerView(List<Driver> driverList, String km,
-                                             String locationAddress, String destinationAddress, LatLng destinationLocation) {
+                                             String locationAddress, String destinationAddress,
+                                             LatLng destinationLocation) {
         driverRecyclerView.setHasFixedSize(true);
         driverRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        DriverAdapter adapter = new DriverAdapter(this, driverList, km, locationAddress, destinationAddress, destinationLocation);
+        DriverAdapter adapter = new DriverAdapter(this, driverList, km, locationAddress,
+                destinationAddress, destinationLocation);
         driverRecyclerView.setAdapter(adapter);
         adapter.notifyDataSetChanged();
     }

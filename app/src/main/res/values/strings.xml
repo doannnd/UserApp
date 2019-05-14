@@ -121,5 +121,6 @@
     <string name="sum_text">SUM</string>
     <string name="thank_you">Thank you your submit</string>
     <string name="trip_price_text">VND %sK</string>
+    <string name="review_driver">Please review your driver</string>
 
 </resources>

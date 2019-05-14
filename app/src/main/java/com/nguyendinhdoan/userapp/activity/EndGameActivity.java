@@ -50,6 +50,7 @@ public class EndGameActivity extends AppCompatActivity implements RatingBar.OnRa
     private DatabaseReference rateDriverTable;
     private DatabaseReference driverTable;
     private String tripPrice;
+    private double rates;
 
     public static Intent start(Context context) {
         return new Intent(context, EndGameActivity.class);
@@ -124,15 +125,12 @@ public class EndGameActivity extends AppCompatActivity implements RatingBar.OnRa
 
     @Override
     public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
-        double rates = ratingBar.getRating();
-
-        RateDriver rateDriver = new RateDriver(String.valueOf(rates));
-        // save rates to rate table
-        saveRateToDatabase(rateDriver);
+        rates = ratingBar.getRating();
     }
 
-    private void saveRateToDatabase(RateDriver rateDriver) {
+    private void saveRateToDatabase() {
         if (driver.getId() != null) {
+            RateDriver rateDriver = new RateDriver(String.valueOf(rates));
             rateDriverTable.child(driver.getId())
                     .push()
                     .setValue(rateDriver)
@@ -189,7 +187,7 @@ public class EndGameActivity extends AppCompatActivity implements RatingBar.OnRa
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
                         if (task.isSuccessful()) {
-                            showSnackBar();
+                            showSnackBar(getString(R.string.thank_you));
                         } else {
                             Log.e(TAG,"save rate to driver table error");
                         }
@@ -197,8 +195,8 @@ public class EndGameActivity extends AppCompatActivity implements RatingBar.OnRa
                 });
     }
 
-    private void showSnackBar() {
-        Snackbar.make(findViewById(android.R.id.content), getString(R.string.thank_you), Snackbar.LENGTH_SHORT).show();
+    private void showSnackBar(String message) {
+        Snackbar.make(findViewById(android.R.id.content), message , Snackbar.LENGTH_SHORT).show();
     }
 
     @Override
@@ -209,10 +207,15 @@ public class EndGameActivity extends AppCompatActivity implements RatingBar.OnRa
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.close_image_view) {
-            Intent intentUser = UserActivity.start(this);
-            intentUser.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intentUser);
-            finish();
+            if (rates == 0.0) {
+                showSnackBar(getString(R.string.review_driver));
+            } else {
+                saveRateToDatabase();
+                Intent intentUser = UserActivity.start(this);
+                intentUser.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intentUser);
+                finish();
+            }
         }
     }
 }
