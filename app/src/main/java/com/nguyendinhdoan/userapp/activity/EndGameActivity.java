@@ -157,7 +157,7 @@ public class EndGameActivity extends AppCompatActivity implements RatingBar.OnRa
                         for (DataSnapshot data : dataSnapshot.getChildren()) {
                             RateDriver rateDriver = data.getValue(RateDriver.class);
                             if (rateDriver != null) {
-                                ratesSum = Double.parseDouble(rateDriver.getRates());
+                                ratesSum += Double.parseDouble(rateDriver.getRates());
                                 ratesCount++;
                             }
                         }

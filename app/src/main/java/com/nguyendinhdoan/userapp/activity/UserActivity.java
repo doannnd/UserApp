@@ -963,27 +963,29 @@ public class UserActivity extends AppCompatActivity
                                 Driver driver = dataSnapshot.getValue(Driver.class);
                                 if (driver != null) {
 
-                                    // show driver with icon car on google map
-                                    userGoogleMap.addMarker(new MarkerOptions()
-                                            .position(new LatLng(location.latitude, location.longitude))
-                                            .flat(true)
-                                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_car))
-                                            .title(driver.getName())
-                                            .snippet(driver.getPhone())
-                                    );
-                                    // add driver to list
-                                    if (!driverList.contains(driver)) {
-                                        driverList.add(driver);
-                                    }
-
-                                    if (directionPolylineList != null) {
-                                        loadAllDriverToRecyclerView(
-                                                driverList,
-                                                km,
-                                                locationAddress,
-                                                destinationAddress,
-                                                destinationLocation
+                                    if (driver.getState().equals(getString(R.string.state_not_working))) {
+                                        // show driver with icon car on google map
+                                        userGoogleMap.addMarker(new MarkerOptions()
+                                                .position(new LatLng(location.latitude, location.longitude))
+                                                .flat(true)
+                                                .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_car))
+                                                .title(driver.getName())
+                                                .snippet(driver.getPhone())
                                         );
+                                        // add driver to list
+                                        if (!driverList.contains(driver)) {
+                                            driverList.add(driver);
+                                        }
+
+                                        if (directionPolylineList != null) {
+                                            loadAllDriverToRecyclerView(
+                                                    driverList,
+                                                    km,
+                                                    locationAddress,
+                                                    destinationAddress,
+                                                    destinationLocation
+                                            );
+                                        }
                                     }
 
                                 }

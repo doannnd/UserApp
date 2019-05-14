@@ -41,8 +41,6 @@ import com.nguyendinhdoan.userapp.remote.IFirebaseMessagingAPI;
 import com.nguyendinhdoan.userapp.services.MyFirebaseIdServices;
 import com.nguyendinhdoan.userapp.services.MyFirebaseMessaging;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
 import retrofit2.Call;
@@ -52,8 +50,6 @@ import retrofit2.Response;
 public class CallActivity extends AppCompatActivity implements View.OnClickListener {
 
     private static final String TAG = "CallActivity";
-    private static final String DRIVER_TABLE_NAME = "drivers";
-    private static final String STATE_KEY = "state";
     private static final String NOTIFICATION_KEY = "cancel";
     public static final String MESSAGE_CANCEL_KEY = "MESSAGE_CANCEL_KEY";
     public static final String MESSAGE_ACCEPT_KEY = "MESSAGE_ACCEPT_KEY";
@@ -206,7 +202,6 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
                     @Override
                     public void onResponse(@NonNull Call<Result> call, @NonNull Response<Result> response) {
                         if (response.isSuccessful()) {
-                            updateStateDriver();
                             finish();
                         }
                     }
@@ -214,26 +209,6 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
                     @Override
                     public void onFailure(@NonNull Call<Result> call, @NonNull Throwable t) {
                         Log.e(TAG, "onFailure: error" + t.getMessage());
-                    }
-                });
-    }
-
-    private void updateStateDriver() {
-        Map<String, Object> driverUpdateState = new HashMap<>();
-        String stateValue = getString(R.string.state_not_working);
-        driverUpdateState.put(STATE_KEY, stateValue);
-
-        DatabaseReference driverTable = FirebaseDatabase.getInstance().getReference(DRIVER_TABLE_NAME);
-        driverTable.child(driver.getId())
-                .updateChildren(driverUpdateState)
-                .addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()) {
-                            Log.d(TAG, "update state driver success");
-                        } else {
-                            Log.e(TAG, "update state driver failed" + task.getException());
-                        }
                     }
                 });
     }
