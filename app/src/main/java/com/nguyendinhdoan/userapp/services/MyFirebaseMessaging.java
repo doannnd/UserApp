@@ -34,6 +34,7 @@ public class MyFirebaseMessaging extends FirebaseMessagingService {
     public static final String START_TRIP_TITLE = "startTrip";
     private static final int PENDING_REQUEST_CODE = 0;
     private static final int NOTIFY_ID = 1;
+    public static final String MESSAGE_DRIVER_DROP_OFF = "MESSAGE_DRIVER_DROP_OFF";
 
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
@@ -56,7 +57,7 @@ public class MyFirebaseMessaging extends FirebaseMessagingService {
                     notification(title, body);
                     break;
                 case DROP_OFF_TITLE:
-                    sendMessageToTrackingActivity(title);
+                    sendMessageDropOff(body);
                     notification(title, body);
                     break;
                 case CANCEL_TRIP_TITLE:
@@ -69,6 +70,12 @@ public class MyFirebaseMessaging extends FirebaseMessagingService {
             }
         }
 
+    }
+
+    private void sendMessageDropOff(String body) {
+        Intent intent = new Intent(MESSAGE_DRIVER_DROP_OFF);
+        intent.putExtra(MESSAGE_KEY, body);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
     private void notification(String title, String body) {

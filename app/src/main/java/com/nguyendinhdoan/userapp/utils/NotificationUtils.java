@@ -16,7 +16,7 @@ import com.nguyendinhdoan.userapp.R;
 public class NotificationUtils extends ContextWrapper {
 
     private static final String USER_APP_ID = "com.nguyendinhdoan.userapp";
-    private static final String USER_APP_NAME= "user_app";
+    private static final String USER_APP_NAME = "user_app";
 
     private NotificationManager manager;
 
@@ -30,7 +30,8 @@ public class NotificationUtils extends ContextWrapper {
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void createChannels() {
-        NotificationChannel notificationChannel = new NotificationChannel(USER_APP_ID, USER_APP_NAME, NotificationManager.IMPORTANCE_DEFAULT);
+        NotificationChannel notificationChannel =
+                new NotificationChannel(USER_APP_ID, USER_APP_NAME, NotificationManager.IMPORTANCE_DEFAULT);
         notificationChannel.enableLights(true);
         notificationChannel.enableVibration(true);
         notificationChannel.setLightColor(Color.GRAY);
@@ -47,8 +48,12 @@ public class NotificationUtils extends ContextWrapper {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    public Notification.Builder getUserNotification(String title, String content, PendingIntent contentIntent,
-                                                    Uri soundUri) {
+    public Notification.Builder getUserNotification(
+            String title,
+            String content,
+            PendingIntent contentIntent,
+            Uri soundUri
+    ) {
         return new Notification.Builder(getApplicationContext(), USER_APP_ID)
                 .setContentText(content)
                 .setContentTitle(title)

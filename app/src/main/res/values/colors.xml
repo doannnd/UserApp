@@ -21,5 +21,6 @@
 
     <color name="edit_text_hint">#a4b0b7</color>
     <color name="light_blue_gray">#eaeff2</color>
+    <color name="duskYellow">#FFD600</color>
 
 </resources>

@@ -116,5 +116,10 @@
     <string name="yeah_the_driver_has_accepted_your_request">Yeah! The driver has accepted your request</string>
     <string name="cancel_trip_message">The driver has canceled the trip for some reason, please find another driver</string>
     <string name="intro_start_trip">We are on our way %s</string>
+    <string name="end_game_text">End Game</string>
+    <string name="close_image_view">close image view</string>
+    <string name="sum_text">SUM</string>
+    <string name="thank_you">Thank you your submit</string>
+    <string name="trip_price_text">VND %sK</string>
 
 </resources>

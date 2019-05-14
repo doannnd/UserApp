@@ -3,12 +3,15 @@ package com.nguyendinhdoan.userapp.common;
 import android.location.Location;
 import android.net.Uri;
 
-import com.google.android.gms.maps.model.LatLng;
 import com.nguyendinhdoan.userapp.model.User;
 import com.nguyendinhdoan.userapp.remote.FirebaseMessagingClient;
 import com.nguyendinhdoan.userapp.remote.IFirebaseMessagingAPI;
 import com.nguyendinhdoan.userapp.remote.IGoogleAPI;
 import com.nguyendinhdoan.userapp.remote.RetrofitClient;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class Common {
 
@@ -39,7 +42,6 @@ public class Common {
     }
 
     public static IGoogleAPI getGoogleAPI() {
-
         return RetrofitClient.getClient(baseURL).create(IGoogleAPI.class);
     }
 
@@ -56,5 +58,11 @@ public class Common {
                 .appendQueryParameter(URL_QUERY_PARAM_DESTINATION_KEY, destinationPosition)
                 .appendQueryParameter(URL_QUERY_PARAM_API_KEY, API_KEY)
                 .build().toString();
+    }
+
+    public static String getCurrentDate() {
+        Date currentDate = new Date();
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("hh:mm, dd/MM/yyyy", Locale.getDefault());
+        return simpleDateFormat.format(currentDate);
     }
 }

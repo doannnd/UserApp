@@ -106,6 +106,8 @@ public class TrackingActivity extends AppCompatActivity implements OnMapReadyCal
     public static final String DRIVER_CANCEL_TRI_KEY = "DRIVER_CANCEL_TRI_KEY";
     private static final int TRACKING_DIRECTION_PADDING = 150;
     public static final String END_ADDRESS_KEY = "end_address";
+    public static final String DRIVER_DROP_OFF_TRIP_KEY = "DRIVER_DROP_OFF_TRIP_KEY";
+    public static final String DRIVER_DROP_OFF_PRICE_TRIP_KEY = "DRIVER_DROP_OFF_PRICE_TRIP_KEY";
 
     private TextView timeTextView;
     private TextView introTextView;
@@ -137,6 +139,7 @@ public class TrackingActivity extends AppCompatActivity implements OnMapReadyCal
         setContentView(R.layout.activity_tracking);
 
         setupBroadcastReceiver();
+        setupBroadcastReceiverDropOff();
         initViews();
         setupUI();
         addEvents();
@@ -145,6 +148,11 @@ public class TrackingActivity extends AppCompatActivity implements OnMapReadyCal
     private void setupBroadcastReceiver() {
         LocalBroadcastManager.getInstance(this).registerReceiver(
                 mMessageReceiver, new IntentFilter(MyFirebaseMessaging.MESSAGE_DRIVER_TRACKING_KEY));
+    }
+
+    private void setupBroadcastReceiverDropOff() {
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+                mMessageReceiverDropOff, new IntentFilter(MyFirebaseMessaging.MESSAGE_DRIVER_DROP_OFF));
     }
 
     private void addEvents() {
@@ -545,42 +553,8 @@ public class TrackingActivity extends AppCompatActivity implements OnMapReadyCal
         Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_SHORT).show();
     }
 
-    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String message = intent.getStringExtra(MyFirebaseMessaging.MESSAGE_KEY);
-            switch (message) {
-                case MyFirebaseMessaging.ARRIVED_TITLE: {
-                    isArrived = true;
-                    introTextView.setText(getString(R.string.driver_has_arrived));
-                    break;
-                }
-                case MyFirebaseMessaging.CANCEL_TRIP_TITLE: {
-                    Intent intentCancel = UserActivity.start(TrackingActivity.this);
-                    intentCancel.putExtra(DRIVER_CANCEL_TRI_KEY, getString(R.string.cancel_trip_message));
-                    intentCancel.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                    startActivity(intentCancel);
-                    finish();
-                    break;
-                }
-                case MyFirebaseMessaging.START_TRIP_TITLE: {
-
-                    cancelButton.setVisibility(View.GONE);
-
-                    if (destinationLocation != null) {
-                        displayMarkerDestinationLocation();
-                    }
-                    break;
-                }
-                case MyFirebaseMessaging.DROP_OFF_TITLE: {
-                    break;
-                }
-            }
-        }
-    };
-
     private void displayMarkerDestinationLocation() {
-        loadInforTrip();
+        loadInforTripForUser();
 
         // adjusting bound
         LatLngBounds.Builder builder = new LatLngBounds.Builder();
@@ -599,7 +573,7 @@ public class TrackingActivity extends AppCompatActivity implements OnMapReadyCal
         );
     }
 
-    private void loadInforTrip() {
+    private void loadInforTripForUser() {
         String currentLocation = String.format(Locale.getDefault(), "%f,%f",
                 Common.lastLocation.getLatitude(), Common.lastLocation.getLongitude());
         String driverLocation = String.format(Locale.getDefault(), "%f,%f",
@@ -645,6 +619,48 @@ public class TrackingActivity extends AppCompatActivity implements OnMapReadyCal
             e.printStackTrace();
         }
     }
+
+    private BroadcastReceiver mMessageReceiverDropOff = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String message = intent.getStringExtra(MyFirebaseMessaging.MESSAGE_KEY);
+            Intent intentDrop = EndGameActivity.start(TrackingActivity.this);
+            intentDrop.putExtra(DRIVER_DROP_OFF_TRIP_KEY, driver);
+            intentDrop.putExtra(DRIVER_DROP_OFF_PRICE_TRIP_KEY, message);
+            intentDrop.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intentDrop);
+            finish();
+        }
+    };
+
+    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String message = intent.getStringExtra(MyFirebaseMessaging.MESSAGE_KEY);
+            switch (message) {
+                case MyFirebaseMessaging.ARRIVED_TITLE: {
+                    isArrived = true;
+                    introTextView.setText(getString(R.string.driver_has_arrived));
+                    break;
+                }
+                case MyFirebaseMessaging.CANCEL_TRIP_TITLE: {
+                    Intent intentCancel = UserActivity.start(TrackingActivity.this);
+                    intentCancel.putExtra(DRIVER_CANCEL_TRI_KEY, getString(R.string.cancel_trip_message));
+                    intentCancel.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intentCancel);
+                    finish();
+                    break;
+                }
+                case MyFirebaseMessaging.START_TRIP_TITLE: {
+                    cancelButton.setVisibility(View.GONE);
+                    if (destinationLocation != null) {
+                        displayMarkerDestinationLocation();
+                    }
+                    break;
+                }
+            }
+        }
+    };
 
     @Override
     protected void onDestroy() {

@@ -16,11 +16,9 @@ public class CommonUtils {
     public static void hideKeyboard(Activity activity) {
         InputMethodManager manager = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
         View view = activity.getCurrentFocus();
-
         if (view == null) {
             view = new View(activity);
         }
-
         if (manager != null) {
             manager.hideSoftInputFromWindow(view.getWindowToken(), HIDE_KEYBOARD_FLAGS);
         }

@@ -2,7 +2,6 @@ package com.nguyendinhdoan.userapp.adapter;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
 import android.support.v7.widget.RecyclerView;
@@ -29,7 +28,6 @@ public class DriverAdapter extends RecyclerView.Adapter<DriverAdapter.ViewHolder
     public static final String DESTINATION_ADDRESS_KEY = "DESTINATION_ADDRESS_KEY";
     public static final String PRICE_KEY = "PRICE_KEY";
     public static final String DESTINATION_LOCATION_KEY = "DESTINATION_LOCATION_KEY";
-    public static final String DESTINATION_LOCATION_BUNDLE = "DESTINATION_LOCATION_BUNDLE";
 
     private Context context;
     private List<Driver> driverList;

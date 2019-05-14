@@ -102,7 +102,6 @@ import com.nguyendinhdoan.userapp.model.User;
 import com.nguyendinhdoan.userapp.remote.IGoogleAPI;
 import com.nguyendinhdoan.userapp.utils.CommonUtils;
 import com.nguyendinhdoan.userapp.widget.CancelDialogFragment;
-import com.stepstone.apprating.AppRatingDialog;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
 
@@ -150,8 +149,6 @@ public class UserActivity extends AppCompatActivity
     private static final String EMAIL_KEY = "email";
     private static final String PHONE_KEY = "phone";
     private static final String AVATAR_URL_KEY = "avatarUrl";
-    private static final String RATE_DRIVER_TABLE = "rate_driver";
-    private static final String DRIVER_TABLE = "drivers";
     public static final String USER_ID_KEY = "USER_ID_KEY";
 
     public static final String DIRECTION_ROUTES_KEY = "routes";
@@ -200,10 +197,6 @@ public class UserActivity extends AppCompatActivity
     private TextView destinationTextView;
     private RecyclerView driverRecyclerView;
 
-    private DatabaseReference driverTable;
-    private DatabaseReference rateDriverTable;
-    private GeoQuery findGeoQuery;
-
     private List<LatLng> directionPolylineList;
     private Polyline grayPolyline;
     private Polyline blackPolyline;
@@ -214,32 +207,6 @@ public class UserActivity extends AppCompatActivity
     private String destinationAddress;
     private String locationAddress;
 
-
-    private void showDialog() {
-        new AppRatingDialog.Builder()
-                .setPositiveButtonText("Submit")
-                .setNegativeButtonText("Cancel")
-                .setNeutralButtonText("Later")
-                .setNoteDescriptions(Arrays.asList("Very Bad", "Not good", "Quite ok", "Very Good", "Excellent !!!"))
-                .setDefaultRating(3)
-                .setTitle("Rate for driver")
-                .setDescription("Please select some stars and give your feedback")
-                .setCommentInputEnabled(true)
-                .setDefaultComment("Comment here")
-                .setStarColor(R.color.starColor)
-                .setNoteDescriptionTextColor(R.color.noteDescriptionTextColor)
-                .setTitleTextColor(R.color.titleTextColor)
-                .setDescriptionTextColor(R.color.contentTextColor)
-                .setHint("Please write your comment here ...")
-                .setHintTextColor(R.color.hintTextColor)
-                .setCommentTextColor(R.color.commentTextColor)
-                .setCommentBackgroundColor(R.color.colorCommentBackground)
-                .setWindowAnimation(R.style.MyDialogFadeAnimation)
-                .setCancelable(false)
-                .setCanceledOnTouchOutside(false)
-                .create(UserActivity.this)
-                .show();
-    }
 
     public static Intent start(Context context) {
         return new Intent(context, UserActivity.class);
@@ -330,9 +297,6 @@ public class UserActivity extends AppCompatActivity
 
         // storage
         storageReference = FirebaseStorage.getInstance().getReference();
-
-        driverTable = FirebaseDatabase.getInstance().getReference(DRIVER_TABLE);
-        rateDriverTable = FirebaseDatabase.getInstance().getReference(RATE_DRIVER_TABLE);
     }
 
     private void setupLocation() {
@@ -1196,82 +1160,5 @@ public class UserActivity extends AppCompatActivity
         driverRecyclerView.setAdapter(adapter);
         adapter.notifyDataSetChanged();
     }
-
-   /*private void findDriver() {
-        findGeoQuery = driverLocationGeoFire.queryAtLocation(
-                new GeoLocation(lastLocation.getLatitude(), lastLocation.getLongitude()), radiusFindDriver
-        );
-
-        findGeoQuery.removeAllListeners();
-        findGeoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
-            @Override
-            public void onKeyEntered(final String key, GeoLocation location) {
-                if (!Common.isDriverFound) {
-                    Common.isFind = true;
-                    DatabaseReference driverTable = FirebaseDatabase.getInstance().getReference(DRIVER_TABLE_NAME)
-                            .child(key);
-                    driverTable.addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                            Driver driverPickupRequest = dataSnapshot.getValue(Driver.class);
-                            Log.d(TAG, "sate: " + driverPickupRequest.getState());
-                            if (driverPickupRequest.getState().equals("not_working") && driverPickupRequest.getCancel().equals("0")) {
-                                Common.isDriverFound = true;
-                                Common.driverId = key;
-                                Toast.makeText(UserActivity.this, "" + key, Toast.LENGTH_SHORT).show();
-
-                                driverNameTextView.setText(driverPickupRequest.getName());
-                                if (driverPickupRequest.getRates() == null) {
-                                    driverStarTextView.setText("No");
-                                } else {
-                                    driverStarTextView.setText(driverPickupRequest.getRates());
-                                }
-                                phoneNumberDriver = driverPickupRequest.getPhone();
-                                driverPhoneTextView.setText(phoneNumberDriver);
-                                // show call detail
-                                callDriverBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
-                            } else {
-                                Common.isFind = false;
-                            }
-                        }
-
-                        @Override
-                        public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                        }
-                    });
-                }
-            }
-
-            @Override
-            public void onKeyExited(String key) {
-
-            }
-
-            @Override
-            public void onKeyMoved(String key, GeoLocation location) {
-
-            }
-
-            @Override
-            public void onGeoQueryReady() {
-                if (!Common.isFind && !Common.isDriverFound && radiusFindDriver < RADIUS_LOAD_DRIVER_LIMIT) {
-                    radiusFindDriver++;
-                    findDriver();
-                } else {
-                    if (!Common.isDriverFound && !Common.isFind) {
-                        showSnackBar(getString(R.string.no_driver));
-                        findGeoQuery.removeAllListeners();
-                    }
-                }
-            }
-
-            @Override
-            public void onGeoQueryError(DatabaseError error) {
-
-            }
-        });
-
-    }*/
 
 }

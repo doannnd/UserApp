@@ -1,23 +1,18 @@
 package com.nguyendinhdoan.userapp.activity;
 
-import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -33,12 +28,6 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.InstanceIdResult;
 import com.google.gson.Gson;
-import com.karumi.dexter.Dexter;
-import com.karumi.dexter.PermissionToken;
-import com.karumi.dexter.listener.PermissionDeniedResponse;
-import com.karumi.dexter.listener.PermissionGrantedResponse;
-import com.karumi.dexter.listener.PermissionRequest;
-import com.karumi.dexter.listener.single.PermissionListener;
 import com.nguyendinhdoan.userapp.R;
 import com.nguyendinhdoan.userapp.adapter.DriverAdapter;
 import com.nguyendinhdoan.userapp.common.Common;
@@ -363,80 +352,4 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
                 .unregisterReceiver(mMessageReceiver);
     }
 
-
-    /* @Override
-    public void onNegativeButtonClicked() {
-        Toast.makeText(this, "cancel", Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void onNeutralButtonClicked() {
-        Toast.makeText(this, "later", Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void onPositiveButtonClicked(int rates, @NonNull String comments) {
-        RateDriver rateDriver = new RateDriver(String.valueOf(rates), comments);
-
-        rateDriverTable.child(Common.driverId)
-                .push()
-                .setValue(rateDriver)
-                .addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()) {
-
-                            // if success , calculate average of rate and update to Driver information
-                            rateDriverTable.child(Common.driverId)
-                                    .addValueEventListener(new ValueEventListener() {
-                                        @Override
-                                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                            double sumStar = 0.0;
-                                            int count = 0;
-                                            for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
-                                                RateDriver rateDriver1 = postSnapshot.getValue(RateDriver.class);
-                                                if (rateDriver1 != null) {
-                                                    sumStar += Double.parseDouble(rateDriver1.getRates());
-                                                    count++;
-                                                }
-                                            }
-                                            double averageStar = sumStar / count;
-                                            DecimalFormat df = new DecimalFormat("#.#");
-                                            String valueUpdate = df.format(averageStar);
-
-
-                                            // create object update
-                                            Map<String, Object> driverUpdateRate = new HashMap<>();
-                                            driverUpdateRate.put("rates", valueUpdate);
-
-                                            driverTable.child(Common.driverId).updateChildren(driverUpdateRate)
-                                                    .addOnCompleteListener(new OnCompleteListener<Void>() {
-                                                        @Override
-                                                        public void onComplete(@NonNull Task<Void> task) {
-                                                            if (task.isSuccessful()) {
-                                                                showSnackBar("Thank you your submit");
-                                                                // reset pickup request
-                                                                findGeoQuery.removeAllListeners();
-                                                                //driverCallButton.setEnabled(true);
-                                                                Common.driverId = "";
-                                                                Common.isDriverFound = false;
-                                                            } else {
-                                                                showSnackBar("rate updated but can't write to driver table");
-                                                            }
-                                                        }
-                                                    });
-                                        }
-
-                                        @Override
-                                        public void onCancelled(@NonNull DatabaseError databaseError) {
-                                            Log.e(TAG, "onCancelled: error" + databaseError);
-                                        }
-                                    });
-
-                        } else {
-                            Toast.makeText(UserActivity.this, "error occur", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
-    }*/
 }
