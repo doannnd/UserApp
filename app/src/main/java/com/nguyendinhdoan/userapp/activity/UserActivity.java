@@ -895,6 +895,21 @@ public class UserActivity extends AppCompatActivity
             }
         });
 
+        DatabaseReference driverTable = FirebaseDatabase.getInstance()
+                .getReference(DRIVER_TABLE_NAME);
+        driverTable.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                // reload if change driver location : offline or online of driver
+                loadAllAvailableDriver();
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Log.e(TAG, "onCancelled: error in reload all available driver " + databaseError);
+            }
+        });
+
         double userLatitude = Common.lastLocation.getLatitude();
         double userLongitude = Common.lastLocation.getLongitude();
 
@@ -928,7 +943,7 @@ public class UserActivity extends AppCompatActivity
     private void loadAllAvailableDriver() {
         driverList = new ArrayList<>();
 
-        if (directionPolylineList != null) {
+        if (directionPolylineList != null && km != null) {
             loadAllDriverToRecyclerView(
                     driverList,
                     km,
@@ -977,7 +992,7 @@ public class UserActivity extends AppCompatActivity
                                             driverList.add(driver);
                                         }
 
-                                        if (directionPolylineList != null) {
+                                        if (directionPolylineList != null && km != null) {
                                             loadAllDriverToRecyclerView(
                                                     driverList,
                                                     km,
