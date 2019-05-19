@@ -211,6 +211,7 @@ public class UserActivity extends AppCompatActivity
     private String km;
     private String destinationAddress;
     private String locationAddress;
+    private GeoQuery loadAllGeoQuery;
 
 
     public static Intent start(Context context) {
@@ -943,7 +944,8 @@ public class UserActivity extends AppCompatActivity
     private void loadAllAvailableDriver() {
         driverList = new ArrayList<>();
 
-        if (directionPolylineList != null && km != null) {
+        if (directionPolylineList != null && km != null
+                && locationAddress != null && destinationAddress != null && destinationLocation != null) {
             loadAllDriverToRecyclerView(
                     driverList,
                     km,
@@ -963,7 +965,7 @@ public class UserActivity extends AppCompatActivity
             polyLineAnimator.cancel();
         }
 
-        GeoQuery loadAllGeoQuery = driverLocationGeoFire.queryAtLocation(new GeoLocation(
+        loadAllGeoQuery = driverLocationGeoFire.queryAtLocation(new GeoLocation(
                 Common.lastLocation.getLatitude(), Common.lastLocation.getLongitude()), radiusLoadAllDriver);
 
         loadAllGeoQuery.removeAllListeners();
@@ -992,7 +994,8 @@ public class UserActivity extends AppCompatActivity
                                             driverList.add(driver);
                                         }
 
-                                        if (directionPolylineList != null && km != null) {
+                                        if (directionPolylineList != null && km != null
+                                                && locationAddress != null && destinationAddress != null && destinationLocation != null) {
                                             loadAllDriverToRecyclerView(
                                                     driverList,
                                                     km,
@@ -1066,6 +1069,7 @@ public class UserActivity extends AppCompatActivity
         if (polyLineAnimator != null) {
             polyLineAnimator.cancel();
         }
+        loadAllGeoQuery.removeAllListeners();
         super.onDestroy();
     }
 
@@ -1150,7 +1154,8 @@ public class UserActivity extends AppCompatActivity
                                 destinationTextView.setText(destinationAddress);
                                 distanceTextView.setText(km);
 
-                                if (driverList != null) {
+                                if (driverList != null && km != null
+                                && locationAddress != null && destinationAddress != null && destinationLocation != null) {
                                     loadAllDriverToRecyclerView(driverList, km, locationAddress,
                                             destinationAddress, destinationLocation);
                                 }

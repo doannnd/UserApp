@@ -78,6 +78,7 @@ public class DriverAdapter extends RecyclerView.Adapter<DriverAdapter.ViewHolder
                 intentCall.putExtra(DESTINATION_ADDRESS_KEY, destinationAddress);
                 intentCall.putExtra(PRICE_KEY, priceFormat);
                 intentCall.putExtra(DESTINATION_LOCATION_KEY, destinationLocation);
+                intentCall.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 context.startActivity(intentCall);
             }
         });
