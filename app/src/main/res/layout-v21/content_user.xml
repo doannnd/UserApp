@@ -24,7 +24,6 @@
             android:id="@+id/pickup_request_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:elevation="16dp"
             android:src="@android:color/transparent"
             app:backgroundTint="@color/colorBackgroundCall" />
 
@@ -33,6 +32,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:text="@string/pickup_request"
+            android:elevation="16dp"
             android:textColor="@android:color/white" />
 
     </FrameLayout>

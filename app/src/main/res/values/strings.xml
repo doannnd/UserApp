@@ -122,5 +122,6 @@
     <string name="thank_you">Thank you your submit</string>
     <string name="trip_price_text">VND %sK</string>
     <string name="review_driver">Please review your driver</string>
+    <string name="network_not_connect">Network not connect</string>
 
 </resources>

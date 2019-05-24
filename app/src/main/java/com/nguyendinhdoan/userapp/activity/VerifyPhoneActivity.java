@@ -72,9 +72,11 @@ public class VerifyPhoneActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_verify_phone);
 
-        initViews();
-        setupUI();
-        addEvents();
+        if (CommonUtils.isNetworkConnected(this)) {
+            initViews();
+            setupUI();
+            addEvents();
+        }
     }
 
     private void initViews() {

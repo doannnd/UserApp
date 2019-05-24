@@ -18,6 +18,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.nguyendinhdoan.userapp.R;
 import com.nguyendinhdoan.userapp.adapter.HistoryAdapter;
 import com.nguyendinhdoan.userapp.model.History;
+import com.nguyendinhdoan.userapp.utils.CommonUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,9 +40,11 @@ public class HistoryActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_history);
 
-        initViews();
-        setupData();
-        //initRecyclerView();
+        if (CommonUtils.isNetworkConnected(this)) {
+            initViews();
+            setupData();
+            //initRecyclerView();
+        }
     }
 
     private void setupData() {

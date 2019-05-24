@@ -25,6 +25,7 @@ import com.nguyendinhdoan.userapp.R;
 import com.nguyendinhdoan.userapp.common.Common;
 import com.nguyendinhdoan.userapp.model.Driver;
 import com.nguyendinhdoan.userapp.model.RateDriver;
+import com.nguyendinhdoan.userapp.utils.CommonUtils;
 
 import java.text.DecimalFormat;
 import java.util.HashMap;
@@ -61,9 +62,13 @@ public class EndGameActivity extends AppCompatActivity implements RatingBar.OnRa
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_end_game);
 
-        initViews();
-        setupUI();
-        addEvents();
+        if (CommonUtils.isNetworkConnected(this)) {
+            initViews();
+            setupUI();
+            addEvents();
+        } else {
+            showSnackBar(getString(R.string.network_not_connect));
+        }
     }
 
     private void addEvents() {

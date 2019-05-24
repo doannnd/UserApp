@@ -18,7 +18,7 @@ public class Common {
     public static User currentUser;
     public static Location lastLocation;
 
-    private static final String API_KEY = "AIzaSyClP2CSvB0YMfpFwoujmCkFNeLaqn63NmQ";
+    private static final String API_KEY = "AIzaSyDXP3aehsojrBx1Nr0RPt85sLPpZLvmeAM";
     private static final String fcmFURL = "https://fcm.googleapis.com";
     private static final String baseURL = "https://maps.googleapis.com";
 

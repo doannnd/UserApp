@@ -1,7 +1,6 @@
 package com.nguyendinhdoan.userapp.activity;
 
 import android.Manifest;
-import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -33,7 +32,6 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.animation.LinearInterpolator;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -61,7 +59,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.maps.model.SquareCap;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -154,9 +151,9 @@ public class UserActivity extends AppCompatActivity
     public static final String DIRECTION_ROUTES_KEY = "routes";
     public static final String DIRECTION_POLYLINE_KEY = "overview_polyline";
     public static final String DIRECTION_POINT_KEY = "points";
-    public static final int DIRECTION_PADDING = 150;
+    public static final int DIRECTION_PADDING = 180;
     private static final float POLYLINE_WIDTH = 5F;
-    private static final long DIRECTION_ANIMATE_DURATION = 3000L;
+    //private static final long DIRECTION_ANIMATE_DURATION = 3000L;
 
     private static final String DIRECTION_LEGS_KEY = "legs";
     private static final String DIRECTION_DISTANCE_KEY = "distance";
@@ -203,9 +200,8 @@ public class UserActivity extends AppCompatActivity
     private RecyclerView driverRecyclerView;
 
     private List<LatLng> directionPolylineList;
-    private Polyline grayPolyline;
-    private Polyline blackPolyline;
-    private ValueAnimator polyLineAnimator;
+    //private Polyline blackPolyline;
+    //private ValueAnimator polyLineAnimator;
     private IGoogleAPI mServicesGoogle;
     private List<Driver> driverList;
     private String km;
@@ -224,9 +220,13 @@ public class UserActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user);
 
-        initViews();
-        setupUI();
-        addEvents();
+        if (CommonUtils.isNetworkConnected(this)) {
+            initViews();
+            setupUI();
+            addEvents();
+        } else {
+            showSnackBar(getString(R.string.network_not_connect));
+        }
     }
 
     private void setupLoading() {
@@ -663,9 +663,9 @@ public class UserActivity extends AppCompatActivity
             userGoogleMap.clear();
         }
 
-        if (polyLineAnimator != null) {
+       /* if (polyLineAnimator != null) {
             polyLineAnimator.cancel();
-        }
+        }*/
 
         try {
             //building direction url for driver
@@ -738,9 +738,10 @@ public class UserActivity extends AppCompatActivity
         grayPolylineOptions.addAll(directionPolylineList);
 
         // display black polyline overlay gray polyline on google map
-        grayPolyline = userGoogleMap.addPolyline(grayPolylineOptions);
+        //Polyline grayPolyline =
+        userGoogleMap.addPolyline(grayPolylineOptions);
 
-        PolylineOptions blackPolylineOptions = new PolylineOptions();
+       /* PolylineOptions blackPolylineOptions = new PolylineOptions();
         blackPolylineOptions.color(Color.BLACK);
         blackPolylineOptions.width(POLYLINE_WIDTH);
         blackPolylineOptions.startCap(new SquareCap());
@@ -748,7 +749,7 @@ public class UserActivity extends AppCompatActivity
         blackPolylineOptions.jointType(JointType.ROUND);
 
         // display black polyline on map
-        blackPolyline = userGoogleMap.addPolyline(blackPolylineOptions);
+        blackPolyline = userGoogleMap.addPolyline(blackPolylineOptions);*/
 
         // display default marker at destination position
         int destinationPosition = directionPolylineList.size() - 1;
@@ -759,10 +760,10 @@ public class UserActivity extends AppCompatActivity
         // show destination marker title
         destinationMarker.showInfoWindow();
 
-        animateDirectionPolyline();
+        //animateDirectionPolyline();
     }
 
-    private void animateDirectionPolyline() {
+   /* private void animateDirectionPolyline() {
         // animation polyline
         polyLineAnimator = ValueAnimator.ofInt(0, 100);
         polyLineAnimator.setDuration(DIRECTION_ANIMATE_DURATION);
@@ -781,7 +782,7 @@ public class UserActivity extends AppCompatActivity
             }
         });
         polyLineAnimator.start();
-    }
+    }*/
 
     private void updateUIAndServer(final Uri resultUri) {
         loading.show();
@@ -901,7 +902,7 @@ public class UserActivity extends AppCompatActivity
         driverTable.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                // reload if change driver location : offline or online of driver
+                // reload if change driver change working --> not-working
                 loadAllAvailableDriver();
             }
 
@@ -928,14 +929,16 @@ public class UserActivity extends AppCompatActivity
                 CameraUpdateFactory.newLatLngZoom(new LatLng(userLatitude, userLongitude), USER_MAP_ZOOM)
         );
 
-        userProgressBar.setVisibility(View.INVISIBLE);
+        if (userProgressBar.isShown()) {
+            userProgressBar.setVisibility(View.INVISIBLE);
+        }
+
+        /*if (polyLineAnimator != null) {
+            polyLineAnimator.cancel();
+        }*/
 
         if (directionPolylineList != null) {
             handleDriverDirection(destinationLocation);
-        }
-
-        if (polyLineAnimator != null) {
-            polyLineAnimator.cancel();
         }
 
         loadAllAvailableDriver();
@@ -957,12 +960,12 @@ public class UserActivity extends AppCompatActivity
 
         userGoogleMap.clear();
 
+       /* if (polyLineAnimator != null) {
+            polyLineAnimator.cancel();
+        }*/
+
         if (directionPolylineList != null) {
             handleDriverDirection(destinationLocation);
-        }
-
-        if (polyLineAnimator != null) {
-            polyLineAnimator.cancel();
         }
 
         loadAllGeoQuery = driverLocationGeoFire.queryAtLocation(new GeoLocation(
@@ -1066,9 +1069,9 @@ public class UserActivity extends AppCompatActivity
 
         stopLocationUpdates();
         userGoogleMap.clear();
-        if (polyLineAnimator != null) {
+        /*if (polyLineAnimator != null) {
             polyLineAnimator.cancel();
-        }
+        }*/
         loadAllGeoQuery.removeAllListeners();
         super.onDestroy();
     }

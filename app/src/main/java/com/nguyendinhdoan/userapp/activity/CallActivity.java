@@ -40,6 +40,7 @@ import com.nguyendinhdoan.userapp.model.Token;
 import com.nguyendinhdoan.userapp.remote.IFirebaseMessagingAPI;
 import com.nguyendinhdoan.userapp.services.MyFirebaseIdServices;
 import com.nguyendinhdoan.userapp.services.MyFirebaseMessaging;
+import com.nguyendinhdoan.userapp.utils.CommonUtils;
 
 import java.util.Objects;
 
@@ -75,11 +76,15 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_call);
 
-        updateTokenToDatabase();
-        setupBroadcastReceiver();
-        initViews();
-        setupUI();
-        addEvents();
+        if (CommonUtils.isNetworkConnected(this)) {
+            updateTokenToDatabase();
+            setupBroadcastReceiver();
+            initViews();
+            setupUI();
+            addEvents();
+        } else {
+            showSnackBar(getString(R.string.network_not_connect));
+        }
     }
 
     private void setupBroadcastReceiver() {

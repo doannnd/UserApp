@@ -65,6 +65,7 @@ import com.nguyendinhdoan.userapp.remote.IFirebaseMessagingAPI;
 import com.nguyendinhdoan.userapp.remote.IGoogleAPI;
 import com.nguyendinhdoan.userapp.services.MyFirebaseIdServices;
 import com.nguyendinhdoan.userapp.services.MyFirebaseMessaging;
+import com.nguyendinhdoan.userapp.utils.CommonUtils;
 import com.nguyendinhdoan.userapp.widget.AcceptDialogFragment;
 
 import org.json.JSONArray;
@@ -138,11 +139,15 @@ public class TrackingActivity extends AppCompatActivity implements OnMapReadyCal
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tracking);
 
-        setupBroadcastReceiver();
-        setupBroadcastReceiverDropOff();
-        initViews();
-        setupUI();
-        addEvents();
+        if (CommonUtils.isNetworkConnected(this)) {
+            setupBroadcastReceiver();
+            setupBroadcastReceiverDropOff();
+            initViews();
+            setupUI();
+            addEvents();
+        } else {
+            showSnackBar(getString(R.string.network_not_connect));
+        }
     }
 
     private void setupBroadcastReceiver() {
